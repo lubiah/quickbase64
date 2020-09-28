@@ -1,0 +1,5 @@
+Long:
+--------
+QuickBase64 is a simple application which allows you to convert files to base64 with ease. 
+It has a simple interface and contains no buttons. Just drag your file or text onto the application
+and it will either encode or decode it according to your customization.
