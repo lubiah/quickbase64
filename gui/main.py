@@ -14,12 +14,17 @@ from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter.scrolledtext import *
+from tkinter.filedialog import *
+from ttkwidgets import linklabel
 from TkinterDnD2 import *
-from os import path
+import os
 import base64
+import pathlib
+from os import path
+from subprocess import Popen, PIPE
+from os.path import getsize, splitext
+import tempfile
 #=====================================
-
-
 #Code
 #======================================
 root = TkinterDnD.Tk()
@@ -30,6 +35,9 @@ menubar = Menu(root)
 #Variables
 mode_variable = StringVar(); mode_variable.set('encode') #This is the mode of the program, it is set to encode by default
 status_variable = StringVar() #This is responsible for setting the status of the status bar
+full_file_path = os.path.abspath(os.curdir+'\\file')
+temp_file_name = ''
+drop_type = None #In saving, this checks whether a file or text was dropped
 #======================================
 #Functions and classes
 #===========================================
@@ -39,17 +47,67 @@ class Menubar:
         Menubar.main(self)
 
     def about(self):
-        messagebox.showinfo(title = 'About', message = '''Quick Base64 is a free and open-source application which allows you to
-        encode and decode files by just using drag and drop.
-        This version is the beta release and it contains main bugs.
-        You can report bugs to the github repo at http://www.github.com/black-phoenix1/quickbase64.''')
-
+        def show():
+            global about_menu
+            about_menu = Toplevel()
+            about_menu.title("About")
+            heading = Label(about_menu, text = "Quick Base64", font = ('Calibri', 20, 'bold', 'italic'), fg = 'green',justify = 'center').grid(row = 0, column = 0, sticky = W+E)
+            text_label = Label(about_menu, text = '''An open-source base64 file encoder which can encode your files to base64 format.\nIt can also decode your base64 text to it\'s original file.''', font = ('Calibri', 13)).grid(row = 1, column = 0)
+            site_link = linklabel.LinkLabel(about_menu, text = 'Website: https://www.eakloe.com/quickbase64', font = ('Calibri', 13), link = 'https://www.eakloe.com/quickbase64', cursor = 'hand2').grid(row = 2, column = 0)
+            code_link = linklabel.LinkLabel(about_menu, text = 'Source code: https://www.github.com/biah/quickbase64', font = ('Calibri', 13), link = 'https://www.github.com/quickbase64', cursor = 'hand2').grid(row = 3, column = 0)
+            #=====================================================
+            about_menu.update()
+            height = about_menu.winfo_height()
+            width = about_menu.winfo_width()
+            geometry = center_app(about_menu, width, height)
+            about_menu.geometry("%dx%d+%d+%d" % (geometry[0], geometry[1], geometry[2], geometry[3]))
+            about_menu.resizable(False, False)
+        try:
+            if about_menu.state() == 'normal':
+                about_menu.destroy()
+        except:
+            show()
     def main(self):
         menu = Menu(self.menubar, tearoff = 0)
         menu.add_command(label = 'About', command = lambda: Menubar.about(self))
         menu.add_separator()
         menu.add_command(label = 'Quit', command = lambda: root.quit())
-        self.menubar.add_cascade(label = 'More...', menu = menu)
+        self.menubar.add_cascade(label = 'More...', menu = menu) 
+
+
+    def rightclick_menu_results(event):
+        save_state = DISABLED
+        if temp_file_name != '':
+            save_state = NORMAL
+        menu = Menu(menubar, tearoff = 0)
+        menu.add_command(label = 'Save', command = save_file, state = save_state)
+        menu.tk_popup(event.x_root, event.y_root)
+
+
+def save_file():
+    #Just saves a file
+    mode = mode_variable.get()
+    if mode == 'encode':
+        if drop_type == 'file':
+            p = pathlib.Path(file_path).name
+            with open(p+'.txt', 'w') as file:
+                file.write(results)
+        elif drop_type == 'text':
+            p = asksaveasfilename(filetypes = (("Text files", "*.txt"), ("All files", "*.*")))
+            with open(p, 'w') as file:
+                file.write(results)
+
+def center_app(master, width, height):
+    #This is a function responsible for making sure
+    #that every dialog made is centered.
+    screen_width = master.winfo_screenwidth()
+    screen_height =  master.winfo_screenheight()
+    x = round((screen_width / 2) - (width /2))
+    y = round((screen_height / 2 ) - (height /2))
+    return width, height, x, y
+
+def delete(file_path):
+    os.remove(file_path)
 
 def file_or_dir(contents):
     #This function is responsible for checking if a dropped object
@@ -72,8 +130,7 @@ def insert(text):
     #Responsible for inserting the text into the text area.
     text_area.config(state = 'normal')
     text_area.delete(0.0, END)
-    for i in splitter(text, 5):
-        text_area.insert(END, i)
+    text_area.insert(0.0,text)
     text_area.config(state = DISABLED)
     status_variable.set('Done')
 
@@ -88,6 +145,29 @@ def isbase64(text):
     except:
         return False
 
+def is_file_large(path):
+    #This function is responsible for checking if a file size is large or not.
+    #If it is large, it won't insert it into the screen.
+    #This is to help solve the problem of the application screen freezing because we
+    #want to insert large data.
+    size = getsize(path)
+    max_size = 20000 #If the file size in bytes is larger than this number, the application might freeze
+    
+    if size > max_size:
+        return True
+    else:
+        return False
+
+def get_file_type(filename):
+    #This is a simple function which uses the file cli tool to find the
+    #decoded base64 file type.
+    #It first tries to find the extension of the file using the command [file --extension user_file]
+    #This is expected to return the supposed file extension. If this method fails, the command [file --mime-type user_file]
+    #is used to get the file type.
+    command = Popen(['file','--extension',filename], shell = True, cwd = full_file_path, stdout = PIPE)
+    output = command.stdout.read().decode().lower()
+    if '???' in output: #The file command returns '???' if it doesn't find an extension for a file.
+        command = Popen(['file', '--mime-type'])
 def drop_enter(event):
     #This is what happens when a file enters the widget
     statusbar_label.config(fg = 'green')
@@ -105,6 +185,10 @@ def file_contents(file_path):
             contents = file.read()
             return contents, 'binary'
 def drop_file(event):
+    global drop_type
+    global temp_file_name
+    global results
+    global file_path
     #When someone drops a file or folder.
     if mode_variable.get() == 'encode':
         is_file_or_directory = file_or_dir(event.data)
@@ -112,12 +196,29 @@ def drop_file(event):
             statusbar_label.config(fg = 'red')
             status_variable.set('Sorry, cannot {} a folder'.format(mode_variable.get()))
         else:
+            drop_type = 'file'
             path = is_file_or_directory[1]
+            file_path = path
             contents = file_contents(path)
             type_ = contents[1]
             data = contents[0]
             results = encode(data, type_)
-            insert(results) #The results are inserted into the text area.
+            if not is_file_large(path):
+                insert(results) #The results are inserted into the text area.
+                __, temp_file_name = tempfile.mkstemp()
+                with open(temp_file_name, 'w') as file:
+                    file.write(results)
+                os.close(__)
+
+            else:
+                __, temp_file_name = tempfile.mkstemp()
+                with open(temp_file_name, 'w') as file:
+                    file.write(results)
+                os.close(__)
+                insert(results[1:20000])
+                statusbar_label.config(fg = 'black')
+                status_variable.set("File too large to display all output.")
+                get_file_type(temp_file_name)
     else:
         is_file_or_directory = file_or_dir(event.data)
         if is_file_or_directory[0] == 'directory':
@@ -133,11 +234,34 @@ def drop_file(event):
                 status_variable.set('Sorry, file is not base64')
             else:
                 results = decode(data, type_)
-                insert(results) #The results are inserted into the text area.
+                if not is_file_large(path):
+                    insert(results) #The results are inserted into the text area.
+                else:
+                    insert(results[1:20000])
+                    status_variable.set("File too large to display all output.")
+                    __, temp_file_name = tempfile.mkstemp()
+                    with open(temp_file_name, 'wb') as file:
+                        file.write(results)
+                    os.close(temporary_file)
+                    get_file_type(temp_file_name)
+                
 def drop_text(event):
+    global temp_file_name
+    global drop_type
+    global results
     if mode_variable.get() == 'encode':
+        drop_type = 'text'
         results = encode(event.data, 'normal')
-        insert(results)
+        if len(results) <= 20000:
+            insert(results)
+            __, temp_file_name = tempfile.mkstemp()
+            with open(temp_file_name, 'w') as file:
+                file.write(results)
+            os.close(__)
+        else:
+            insert(results[1:20000])
+            statusbar_label.config(fg ='black')
+            status_variable.set("Text  too large to display all output.")
     elif mode_variable.get() == 'decode':
         if isbase64(event.data) != True:
             statusbar_label.config(fg = 'red')
@@ -185,12 +309,12 @@ statusbar_label = Label(statusbar_frame, textvariable = status_variable)
 #===================================
 file_frame.grid(row = 0, column = 0, sticky = W+E+N+S)
 text_frame.grid(row = 0, column = 1, sticky = E+W+N+S)
-controls_frame.grid(row = 1, column = 0, columnspan = 2, sticky = W+E)
+controls_frame.grid(row = 1, column = 0, columnspan = 2, sticky = W+E+N)
 statusbar_frame.grid(row = 2, column = 0, sticky = W+E, columnspan = 2)
 #========================================
 #   Widgets
 mode_encode.grid(row = 0, column = 0, sticky = W)
-mode_decode.grid(row = 0, column = 1)
+mode_decode.grid(row = 0, column = 2)
 text_area.grid(row = 0, column = 0, sticky = N+E+W+S)
 statusbar_label.grid(row = 0, column = 0)
 #=====================================
@@ -211,8 +335,10 @@ file_frame.dnd_bind('<<DropEnter>>', drop_enter)
 file_frame.dnd_bind('<<Drop:DND_Files>>', drop_file)
 file_frame.dnd_bind('<<Drop:DND_Text>>', drop_text)
 file_frame.dnd_bind('<<DropLeave>>', drop_leave)
-#===================
+#==============================================================================
+root.bind("<Button-3>", Menubar.rightclick_menu_results)
 root.config(menu = menubar)
+root.resizable(width = True, height = False)
 menu = Menubar(menubar)
 root.mainloop()
 #End
