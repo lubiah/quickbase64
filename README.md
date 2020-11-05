@@ -11,4 +11,11 @@ It is available in a GUI and a CLI. Currently, it is running on Windows only but
 ## Aim
 * Quick Base64 is meant to be fast and easy to use.
 * Minimalistic interface but with great features.   
+
+## How it Works
+When the application is opened, the mode is set to 'encode' by default.
+Then a user will drop a file onto the surface and that will initialize the encoding.
+It has no start, encode or decode button. The application only runs when a file is dropped 
+onto it's surface.
+
 Website : [https://www.eakloe.com/quickbase64](https://www.eakloe.com/quickbase64)
