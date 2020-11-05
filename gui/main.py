@@ -33,9 +33,9 @@ root.title('Quick Base64')
 menubar = Menu(root)
 #========================
 #Variables
+save_extension = None #This refers to the extension that the file will be saved in.
 mode_variable = StringVar(); mode_variable.set('encode') #This is the mode of the program, it is set to encode by default
 status_variable = StringVar() #This is responsible for setting the status of the status bar
-full_file_path = os.path.abspath(os.curdir+'\\file')
 temp_file_name = ''
 drop_type = None #In saving, this checks whether a file or text was dropped
 #======================================
@@ -96,6 +96,13 @@ def save_file():
             p = asksaveasfilename(filetypes = (("Text files", "*.txt"), ("All files", "*.*")))
             with open(p, 'w') as file:
                 file.write(results)
+    elif mode == 'decode':
+        if save_extension == None:
+            return
+        p = pathlib.Path(file_path).name
+        with open(p+save_extension, 'wb') as file:
+            file.write(results)
+
 
 def center_app(master, width, height):
     #This is a function responsible for making sure
@@ -122,11 +129,6 @@ def file_or_dir(contents):
         for file in file_frame.tk.splitlist(contents):
             return file_or_dir(file)
 def insert(text):
-    def splitter(lst, n):
-        #This divides the data into smaller chunks.
-        #When the data is large, the application will freeze.
-        for i in range(0, len(lst), n):
-            yield lst[i:i+n]
     #Responsible for inserting the text into the text area.
     text_area.config(state = 'normal')
     text_area.delete(0.0, END)
@@ -157,17 +159,65 @@ def is_file_large(path):
         return True
     else:
         return False
-
 def get_file_type(filename):
+    global save_extension
+    full_file_path = os.getcwd()+'//file'
     #This is a simple function which uses the file cli tool to find the
     #decoded base64 file type.
     #It first tries to find the extension of the file using the command [file --extension user_file]
     #This is expected to return the supposed file extension. If this method fails, the command [file --mime-type user_file]
     #is used to get the file type.
     command = Popen(['file','--extension',filename], shell = True, cwd = full_file_path, stdout = PIPE)
-    output = command.stdout.read().decode().lower()
-    if '???' in output: #The file command returns '???' if it doesn't find an extension for a file.
-        command = Popen(['file', '--mime-type'])
+    output = command.stdout.read().decode().lower().strip().split(' ')[1] #The results if command is directed to 'stdout' and read. It is then  decoded from binary and converted into lowercase. It is then stripped into two arrays [pathname : extension]
+    
+    if '???' not in output:
+        print("Extension found...")
+        if '/' not in output: #The output will contain '/' if multiple extensions are given. So if '/' is not in the output. The output is only one.
+            save_extension = "."+output
+        elif '/' in output:
+            output = output.split('/')
+            save_extension = '.'+output[0]
+            print(save_extension)
+        
+    elif '???' in output: #The file command returns '???' if it doesn't find an extension for a file.
+        command = Popen(['file', '--mime-type', filename], shell = True, cwd = full_file_path, stdout = PIPE)
+        print("Extension not found. Trying mime-type method.")
+        output = command.stdout.read().decode().lower()
+        file_type = output.split(" ")[1].strip()
+        print("File type is ", file_type)
+        if file_type == 'text/plain':
+            save_extension = '.txt'
+        elif file_type == 'audio/mpeg':
+            save_extension = '.mp3'
+        elif file_type == 'application/x-dosexec':
+            save_extension = '.exe'
+        elif file_type == 'application/x-font-tff':
+            save_extension = '.ttf'
+        elif file_type == 'image/png':
+            save_extension = '.png'
+        elif file_type == 'image/gif':
+            save_extension = '.gif'
+        elif file_type == 'application/octet-stream':
+            save_extension = '.txt'
+        elif file_type == 'text/html':
+            save_extension = '.html'
+        elif file_type == 'text/rtf':
+            save_extension = '.rtf'
+        elif file_type == 'text/x-c++':
+            save_extension = '.cpp'
+        elif file_type == 'text/x-python':
+            save_extension = '.py'
+        elif file_type == 'text/x-msdos-batch':
+            save_extension = '.bat'
+        elif file_type == 'text/x-php':
+            save_extension = '.php'
+        elif file_type == 'application/zip':
+            save_extension = '.zip'
+        elif file_type == 'application/x-gzip':
+            save_extension = '.tar'
+        elif file_type == 'text/xml':
+            save_extension = '.xml'
+
 def drop_enter(event):
     #This is what happens when a file enters the widget
     statusbar_label.config(fg = 'green')
@@ -218,7 +268,6 @@ def drop_file(event):
                 insert(results[1:20000])
                 statusbar_label.config(fg = 'black')
                 status_variable.set("File too large to display all output.")
-                get_file_type(temp_file_name)
     else:
         is_file_or_directory = file_or_dir(event.data)
         if is_file_or_directory[0] == 'directory':
@@ -226,6 +275,7 @@ def drop_file(event):
             status_variable.set('Sorry, cannot {} a folder'.format(mode_variable.get()))
         else:
             path = is_file_or_directory[1]
+            file_path = path
             contents = file_contents(path)
             type_ = contents[1]
             data = contents[0]
@@ -236,13 +286,18 @@ def drop_file(event):
                 results = decode(data, type_)
                 if not is_file_large(path):
                     insert(results) #The results are inserted into the text area.
+                    __, temp_file_name = tempfile.mkstemp()
+                    with open(temp_file_name, 'wb') as file:
+                        file.write(results)
+                    os.close(__)
+                    get_file_type(temp_file_name)
                 else:
                     insert(results[1:20000])
                     status_variable.set("File too large to display all output.")
                     __, temp_file_name = tempfile.mkstemp()
                     with open(temp_file_name, 'wb') as file:
                         file.write(results)
-                    os.close(temporary_file)
+                    os.close(__)
                     get_file_type(temp_file_name)
                 
 def drop_text(event):
@@ -336,10 +391,16 @@ file_frame.dnd_bind('<<Drop:DND_Files>>', drop_file)
 file_frame.dnd_bind('<<Drop:DND_Text>>', drop_text)
 file_frame.dnd_bind('<<DropLeave>>', drop_leave)
 #==============================================================================
-root.bind("<Button-3>", Menubar.rightclick_menu_results)
+text_area.bind("<Button-3>", Menubar.rightclick_menu_results)
 root.config(menu = menubar)
 root.resizable(width = True, height = False)
 menu = Menubar(menubar)
 root.mainloop()
+#============================================================
 #End
-#=================================
+#============================================================
+try:
+    delete(temp_file_name)
+except FileNotFoundError:
+    pass
+
