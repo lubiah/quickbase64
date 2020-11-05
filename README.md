@@ -8,7 +8,7 @@ It then decodes and write the data according to the mime-type's extension.
 
 It is available in a GUI and a CLI. Currently, it is running on Windows only but I am hoping to compile it on Linux very soon.
 
-#Aim:
+##Aim
 The main aim of creating Quick Base64 was to make an encoder that could encode files to base64 format easily without any struggle.
 It is also meant to be fast.
   
