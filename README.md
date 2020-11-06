@@ -25,7 +25,7 @@ Not only can it encode, it can also decode your base64 contents to it's original
 
 As you can see from it's name, it's *Quick*, that's why it's named Quick Base64.
 
-![Screenshot of the application](C:\Personal Files\PYTHON\Quick Base64\readme\encoding.JPG)
+![Screenshot of the application](readme\encoding.JPG)
 
 ​														__Screenshot of the application__
 
@@ -70,6 +70,6 @@ There are many base64 encoders out there. The reason why Quick Base64 is unique 
 
 You can donate into my bitcoin account. 
 
-<img src="C:\Personal Files\PYTHON\Quick Base64\readme\bitcoin.png" style="zoom: 60%;display:inline;text-align:left" />
+<img src="readme\bitcoin.png" style="zoom: 60%;display:inline;text-align:left" />
 
 
