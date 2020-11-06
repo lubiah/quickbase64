@@ -1,5 +1,8 @@
 # Quick Base64
 Can I get a star :star: - I would really appreciate it. :smile:
+----------------------------------------------------
+[![Github All Releases](https://img.shields.io/github/downloads/biah/quickbase64/total.svg)]()
+------------------------------------------------------
 
 Before we get started, let us know what __Base64__ is first.
 
