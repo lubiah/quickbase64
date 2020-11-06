@@ -1,7 +1,8 @@
 # Quick Base64
 Can I get a star :star: - I would really appreciate it. :smile:
 ----------------------------------------------------
-[![Github All Releases](https://img.shields.io/github/downloads/biah/quickbase64/total.svg)]()
+[![Github All Releases](https://img.shields.io/github/downloads/biah/quickbase64/total.svg)]() 
+![](https://forthebadge.com/images/badges/open-source.svg) [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 ------------------------------------------------------
 
 Before we get started, let us know what __Base64__ is first.
