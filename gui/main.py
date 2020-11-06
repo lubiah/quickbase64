@@ -38,6 +38,8 @@ mode_variable = StringVar(); mode_variable.set('encode') #This is the mode of th
 status_variable = StringVar() #This is responsible for setting the status of the status bar
 temp_file_name = ''
 drop_type = None #In saving, this checks whether a file or text was dropped
+temp_files = [] #This is an array which contains a list of temporary files created.
+default_mode = StringVar().set('encode')
 #======================================
 #Functions and classes
 #===========================================
@@ -50,6 +52,7 @@ class Menubar:
         def show():
             global about_menu
             about_menu = Toplevel()
+            about_menu.resizable(False, False)
             about_menu.title("About")
             heading = Label(about_menu, text = "Quick Base64", font = ('Calibri', 20, 'bold', 'italic'), fg = 'green',justify = 'center').grid(row = 0, column = 0, sticky = W+E)
             text_label = Label(about_menu, text = '''An open-source base64 file encoder which can encode your files to base64 format.\nIt can also decode your base64 text to it\'s original file.''', font = ('Calibri', 13)).grid(row = 1, column = 0)
@@ -61,19 +64,40 @@ class Menubar:
             width = about_menu.winfo_width()
             geometry = center_app(about_menu, width, height)
             about_menu.geometry("%dx%d+%d+%d" % (geometry[0], geometry[1], geometry[2], geometry[3]))
-            about_menu.resizable(False, False)
         try:
             if about_menu.state() == 'normal':
                 about_menu.destroy()
         except:
             show()
+
     def main(self):
         menu = Menu(self.menubar, tearoff = 0)
+        menu.add_command(label = 'Settings', command = lambda : Menubar.settings(self))
         menu.add_command(label = 'About', command = lambda: Menubar.about(self))
         menu.add_separator()
         menu.add_command(label = 'Quit', command = lambda: root.quit())
         self.menubar.add_cascade(label = 'More...', menu = menu) 
 
+    def settings(self):
+        settings_menu = Toplevel(root)
+        settings_menu.resizable(False, False) #This prevents the user from resizing the dialog
+        notebook = ttk.Notebook(settings_menu)
+        notebook.grid(row = 0, column = 0)
+        #==============================================
+        
+        #==============================================
+        general_settings = Frame(notebook)
+        mode_frame = LabelFrame(general_settings)
+        encode_mode = ttk.Radiobutton(mode_frame, text = 'Encode', variable = default_mode, value = 'encode')
+        encode_mode.grid(row = 0, column = 0)
+        decode_mode = ttk.Radiobutton(mode_frame, text = 'Decode', variable = default_mode, value = 'decode')
+        decode_mode.grid(row = 1, column = 0)
+        auto_detect = ttk.Radiobutton(mode_frame, text = 'Auto-detect', variable = default_mode, value = 'detect')
+        auto_detect.grid(row = 2, column = 0)
+        mode_frame.grid(row = 0,column = 0)
+        general_settings.grid(row = 0, column = 0)
+        #=============================================
+        notebook.add(general_settings,text =  'General')
 
     def rightclick_menu_results(event):
         save_state = DISABLED
@@ -259,12 +283,14 @@ def drop_file(event):
                 with open(temp_file_name, 'w') as file:
                     file.write(results)
                 os.close(__)
+                temp_files.append(temp_file_name)
 
             else:
                 __, temp_file_name = tempfile.mkstemp()
                 with open(temp_file_name, 'w') as file:
                     file.write(results)
                 os.close(__)
+                temp_files.append(temp_file_name)
                 insert(results[1:20000])
                 statusbar_label.config(fg = 'black')
                 status_variable.set("File too large to display all output.")
@@ -291,6 +317,7 @@ def drop_file(event):
                         file.write(results)
                     os.close(__)
                     get_file_type(temp_file_name)
+                    temp_files.append(temp_file_name)
                 else:
                     insert(results[1:20000])
                     status_variable.set("File too large to display all output.")
@@ -299,6 +326,7 @@ def drop_file(event):
                         file.write(results)
                     os.close(__)
                     get_file_type(temp_file_name)
+                    temp_files.append(temp_file_name)
                 
 def drop_text(event):
     global temp_file_name
@@ -313,6 +341,7 @@ def drop_text(event):
             with open(temp_file_name, 'w') as file:
                 file.write(results)
             os.close(__)
+            temp_files.append(temp_file_name)
         else:
             insert(results[1:20000])
             statusbar_label.config(fg ='black')
@@ -395,12 +424,24 @@ text_area.bind("<Button-3>", Menubar.rightclick_menu_results)
 root.config(menu = menubar)
 root.resizable(width = True, height = False)
 menu = Menubar(menubar)
+#===========================================
+#   Centering the application
+root.update()
+width = root.winfo_width()
+height = root.winfo_height()
+geometry = center_app(root,width, height)
+root.geometry("%dx%d+%d+%d" %(geometry[0], geometry[1], geometry[2], geometry[3]))
+#===========================================
 root.mainloop()
 #============================================================
 #End
 #============================================================
 try:
-    delete(temp_file_name)
+    #This statement deletes all the temporary files created
+    #by the application.
+    for temporary_file in temp_files:
+        delete(temporary_file)
 except FileNotFoundError:
     pass
+
 

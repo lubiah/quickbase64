@@ -1,31 +1,75 @@
 # Quick Base64
+Can I get a star :star: - I would really appreciate it. :smile:
 
-Quick Base64 is an application which can convert files into Base64 format.
-It can also convert base64 text to it's original format.
+Before we get started, let us know what __Base64__ is first.
 
-When decoding base64 files to it's original format, it uses the [file command](https://en.wikipedia.org/wiki/File_(command)) to determine the mime-type of the data.
-It then decodes and write the data according to the mime-type's extension.
+## What is Base64? 
 
-It is available in a GUI and a CLI. Currently, it is running on Windows only but I am hoping to compile it on Linux very soon.
+According to Wikipedia,
+> __Base64__ is a group of binary-to-text encoding schemes that represent binary data (more specifically a sequence of 8-bit bytes)
+> in  an ASCII string format by translating it into a radix-64 representation. 
 
-## Aim
-* Quick Base64 is meant to be fast and easy to use.
-* Minimalistic interface but with great features.   
+## Why do I need to encode in Base64?
 
-## How it Works
-When the application is opened, the mode is set to 'encode' by default.
-Then a user will drop a file onto the surface and that will initialize the encoding.
-It has no start, encode or decode button. The application only runs when a file is dropped 
-onto it's surface.
+* Encoding in base64 allows you to embed binaries in text.
+* It ensures that data remains intact without modification during transport.
+* Embedding base64 encoded images into your web page, makes the page load faster.
+* Enables you to pass complex data over SSH.
 
-## How it decodes
-When the mode is set to decode, a file can only be decoded if a file is dropped onto it's surface.
-Then file is then checked to verify if it's in base64 format. It is rejected if not.
-The decoded data is written to a temporary file. Then the *file* command is used on the temporary file to determine the 
-type of output file.
-It first tries using the command `file  --extension tempoary_file`, if it doesn't get any output.
-It finally then tries the comand `file --mime-type temporary_file` to get the mime type. An extension is then
-generated from the mime-type.
-Then an extension is generated according to the file type and the decoded data is now.
+  
 
-Website : [https://www.eakloe.com/quickbase64](https://www.eakloe.com/quickbase64)
+## What is Quick Base64?
+
+ is an application which encodes your text and files into base64 format.
+Not only can it encode, it can also decode your base64 contents to it's original format. :dark_sunglasses:
+
+As you can see from it's name, it's *Quick*, that's why it's named Quick Base64.
+
+![Screenshot of the application](C:\Personal Files\PYTHON\Quick Base64\readme\encoding.JPG)
+
+​														__Screenshot of the application__
+
+The application has a minimalistic interface but has great features. The reason is to make it's use simple for normal encoding and decoding, whiles been able to become complex when the need arises.
+
+You might be wondering, "Where is the start, encode or decode button?". The answer is, it has none. So then, how does it encode or decode. The answer is simple, everything is intialized when a file is dropped onto it's surface. 
+
+### How it Works
+
+On application start, the default mode is always set to encode, unless changed by the user.  The magic happens when a file or piece of text is dropped onto it's surface. When an object is dropped, it first's checks the mode to see if it is on encode or decode.
+
+If mode is:
+* Encode:
+
+   ​	First of all, it checks to see if the object dropped was a file, folder or text. It displays an error if a folder is dropped.
+   
+   ​	The contents of the file is read and encoded into base64 format.
+   
+   ​	If the encoded data is greater than 20000 bytes, only the first 20000 bytes are displayed. Reason is that, if the data to be displayed is more than that, it causes the application to hang.
+   
+* Decode:
+
+   ​	When an object is dropped, it checks to see if it is a file or folder. An error is raised if object is a folder.
+
+   ​	If the object is a file, it's contents are read. It is then checked, if it is a valid base64 text.
+
+   ​	If it is, it then decodes the base64 text. In order to know the file type of the decoded data. It uses the [file]('https://www.en.wikipedia.com/wiki/File_(command)') command to find the file 	type.
+
+   ​	It first tries the command `file --extension temporary_file` , if it doesn't get the extension from this command. It tries to get the 
+
+   ​	mime-type using the command `file --mime-type temporary_file` . An extension is then generated from the mime-type of the 	    	contents.
+
+## Why use Quick Base64?
+
+There are many base64 encoders out there. The reason why Quick Base64 is unique is that:
+* It's simple to use.
+* Can encode and decode base64 contents.
+
+
+
+## Donation 
+
+You can donate into my bitcoin account. 
+
+<img src="C:\Personal Files\PYTHON\Quick Base64\readme\bitcoin.png" style="zoom: 60%;display:inline;text-align:left" />
+
+
