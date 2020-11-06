@@ -70,6 +70,6 @@ There are many base64 encoders out there. The reason why Quick Base64 is unique 
 
 You can donate into my bitcoin account. 
 
-<img src="readme\bitcoin.png" style="zoom: 50%;display:inline;text-align:left" />
+<img src="readme\bitcoin.png" style="zoom: 40%;display:inline;text-align:left" />
 
 
