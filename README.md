@@ -42,7 +42,7 @@ Not only can it encode, it can also decode your base64 contents to it's original
 
 As you can see from it's name, it's *Quick*, that's why it's named Quick Base64.
 
-![Screenshot of the application](readme\encoding.png)
+![Screenshot of the application](readme/encoding.png)
 
 ​														__Screenshot of the application__
 
