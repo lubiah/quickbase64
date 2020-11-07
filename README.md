@@ -75,7 +75,7 @@ If mode is:
 
    ​	mime-type using the command `file --mime-type temporary_file` . An extension is then generated from the mime-type of the 	    	contents.
 
-## Why use Quick Base64?
+## Why use Quick Base64? 
 
 There are many base64 encoders out there. The reason why Quick Base64 is unique is that:
 * It's simple to use.
