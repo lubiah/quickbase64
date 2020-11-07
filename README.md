@@ -1,9 +1,19 @@
 # Quick Base64
+
+-----------------------------------------------------------------
+
 Can I get a star :star: - I would really appreciate it. :smile:
-----------------------------------------------------
+
+-------------------
+
 [![Github All Releases](https://img.shields.io/github/downloads/biah/quickbase64/total.svg)]() 
 ![](https://forthebadge.com/images/badges/open-source.svg) [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
-------------------------------------------------------
+
+--------------------------------
+
+<img src="readme/auto_detect_gif.gif" alt="Auto-detect gif" style="zoom: 67%;display:inline-block;" width: />
+
+*Quick Base64 auto-detection mode allows the application to automatically detect the mode for your file. It switches the mode to encode if your file needs to be encoded or switches it to decode if your file needs to be decoded.*
 
 Before we get started, let us know what __Base64__ is first.
 
@@ -16,8 +26,11 @@ According to Wikipedia,
 ## Why do I need to encode in Base64?
 
 * Encoding in base64 allows you to embed binaries in text.
+
 * It ensures that data remains intact without modification during transport.
+
 * Embedding base64 encoded images into your web page, makes the page load faster.
+
 * Enables you to pass complex data over SSH.
 
   
@@ -29,7 +42,7 @@ Not only can it encode, it can also decode your base64 contents to it's original
 
 As you can see from it's name, it's *Quick*, that's why it's named Quick Base64.
 
-![Screenshot of the application](readme//encoding.JPG)
+![Screenshot of the application](readme\encoding.PNG)
 
 ​														__Screenshot of the application__
 
@@ -67,13 +80,12 @@ If mode is:
 There are many base64 encoders out there. The reason why Quick Base64 is unique is that:
 * It's simple to use.
 * Can encode and decode base64 contents.
-
-
+* It can become complex when you want it to. :wink:
 
 ## Donation 
 
 You can donate into my bitcoin account. 
 
-<img src="readme\bitcoin.png" style="zoom: 40%;display:inline;text-align:left" />
+<img src="C:\Personal Files\PYTHON\Quick Base64\readme\bitcoin.png" style="zoom: 60%;display:inline;text-align:left" />
 
 
