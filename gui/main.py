@@ -24,6 +24,8 @@ from os import path
 from subprocess import Popen, PIPE
 from os.path import getsize, splitext
 import tempfile
+from configparser import ConfigParser
+import sys
 #=====================================
 #Code
 #======================================
@@ -34,12 +36,13 @@ menubar = Menu(root)
 #========================
 #Variables
 save_extension = None #This refers to the extension that the file will be saved in.
-mode_variable = StringVar(); mode_variable.set('encode') #This is the mode of the program, it is set to encode by default
+mode_variable = StringVar()
 status_variable = StringVar() #This is responsible for setting the status of the status bar
+auto_detect_variable = IntVar()
 temp_file_name = ''
 drop_type = None #In saving, this checks whether a file or text was dropped
 temp_files = [] #This is an array which contains a list of temporary files created.
-default_mode = StringVar().set('encode')
+checked = False #This is used in auto-detect mode to check if a files mode has been detected.
 #======================================
 #Functions and classes
 #===========================================
@@ -58,6 +61,7 @@ class Menubar:
             text_label = Label(about_menu, text = '''An open-source base64 file encoder which can encode your files to base64 format.\nIt can also decode your base64 text to it\'s original file.''', font = ('Calibri', 13)).grid(row = 1, column = 0)
             site_link = linklabel.LinkLabel(about_menu, text = 'Website: https://www.eakloe.com/quickbase64', font = ('Calibri', 13), link = 'https://www.eakloe.com/quickbase64', cursor = 'hand2').grid(row = 2, column = 0)
             code_link = linklabel.LinkLabel(about_menu, text = 'Source code: https://www.github.com/biah/quickbase64', font = ('Calibri', 13), link = 'https://www.github.com/quickbase64', cursor = 'hand2').grid(row = 3, column = 0)
+            version_label = Label(about_menu, text = 'Version : 0.1.0',font = ('Calibri', 20)).grid(row = 4, column = 0)
             #=====================================================
             about_menu.update()
             height = about_menu.winfo_height()
@@ -79,40 +83,90 @@ class Menubar:
         self.menubar.add_cascade(label = 'More...', menu = menu) 
 
     def settings(self):
-        settings_menu = Toplevel(root)
-        settings_menu.resizable(False, False) #This prevents the user from resizing the dialog
-        notebook = ttk.Notebook(settings_menu)
-        notebook.grid(row = 0, column = 0)
-        #==============================================
-        
-        #==============================================
-        general_settings = Frame(notebook)
-        mode_frame = LabelFrame(general_settings)
-        encode_mode = ttk.Radiobutton(mode_frame, text = 'Encode', variable = default_mode, value = 'encode')
-        encode_mode.grid(row = 0, column = 0)
-        decode_mode = ttk.Radiobutton(mode_frame, text = 'Decode', variable = default_mode, value = 'decode')
-        decode_mode.grid(row = 1, column = 0)
-        auto_detect = ttk.Radiobutton(mode_frame, text = 'Auto-detect', variable = default_mode, value = 'detect')
-        auto_detect.grid(row = 2, column = 0)
-        mode_frame.grid(row = 0,column = 0)
-        general_settings.grid(row = 0, column = 0)
-        #=============================================
-        notebook.add(general_settings,text =  'General')
+        def show():
+            global mode
+            global default_mode
+            global settings_menu
+
+            def change_mode():
+                #When a user changes a RadioButton, this function changes the mode variable's value.
+
+                global mode
+                mode = default_mode.get()
+
+            #======================================
+            settings_menu = Toplevel()
+            settings_menu.resizable(False, False)
+            settings_menu.update()
+            #settings_menu.resizable(False, False) #This prevents the user from resizing the dialog
+            notebook = ttk.Notebook(settings_menu)
+            notebook.grid(row = 0, column = 0)
+            #==============================================default_mode = StringVar().set('encode')
+            default_mode = StringVar()
+            default_mode.set(mode)
+            #==============================================
+            style = ttk.Style()
+            #==============================================
+            general_settings = ttk.Frame(notebook)
+            mode_frame = ttk.LabelFrame(general_settings, text = 'Default mode')
+            encode_mode = ttk.Radiobutton(mode_frame, text = 'Encode',command = change_mode, variable = default_mode, value = 'encode', style = 'TRadiobutton')
+            encode_mode.grid(row = 0, column = 0, sticky = W+E)
+            decode_mode = ttk.Radiobutton(mode_frame, text = 'Decode', variable = default_mode,command = change_mode, value = 'decode', style = 'TRadiobutton')
+            decode_mode.grid(row = 1, column = 0, sticky = W+E)
+            auto_detect = ttk.Radiobutton(mode_frame, text = 'Auto-detect', variable = default_mode,command = change_mode,value = 'detect', style = 'TRadiobutton')
+            auto_detect.grid(row = 2, column = 0, sticky = W+E)
+            mode_frame.grid(row = 0,column = 0, ipadx = 25, ipady = 5)
+            general_settings.grid(row = 0, column = 0)
+            #=============================================
+            notebook.add(general_settings,text =  'General')
+            #===============================================
+            width = settings_menu.winfo_width()
+            height = settings_menu.winfo_height()
+            geometry = center_app(settings_menu, width, height)
+            settings_menu.geometry("%dx%d+%d+%d" % (geometry[0], geometry[1], geometry[2], geometry[3]))
+            #===============================================
+        try:   
+            if settings_menu.state() == 'normal':
+                settings_menu.destroy()
+        except:
+            show()
+   
 
     def rightclick_menu_results(event):
         save_state = DISABLED
         if temp_file_name != '':
             save_state = NORMAL
+        elif drop_type == 'text':
+            save_state = NORMAL
         menu = Menu(menubar, tearoff = 0)
         menu.add_command(label = 'Save', command = save_file, state = save_state)
+        menu.add_command(label = 'Save (Give ext.)', command = save_file_manual, state = save_state)
         menu.tk_popup(event.x_root, event.y_root)
 
+    def rightclick_menu_file(event):
+        menu = Menu(menubar, tearoff = 0)
+        menu.add_command(label = 'Load file', command = load_file)
+        menu.tk_popup(event.x_root, event.y_root)
+
+def save_file_manual():
+    #This function is for saving a file if a user wants
+    #to specify the extension and name of the output.
+    filename = asksaveasfilename()
+    mode = mode_variable.get()
+    if filename == '':
+        return
+    if mode == 'encode':
+        with open(filename, 'w') as file:
+            file.write(results)
+    elif mode == 'decode':
+        with open(filename, 'wb') as file:
+            file.write(results)
 
 def save_file():
     #Just saves a file
     mode = mode_variable.get()
     if mode == 'encode':
-        if drop_type == 'file':
+        if drop_type == 'file' or drop_type == 'load':
             p = pathlib.Path(file_path).name
             with open(p+'.txt', 'w') as file:
                 file.write(results)
@@ -121,12 +175,17 @@ def save_file():
             with open(p, 'w') as file:
                 file.write(results)
     elif mode == 'decode':
-        if save_extension == None:
-            return
-        p = pathlib.Path(file_path).name
-        with open(p+save_extension, 'wb') as file:
-            file.write(results)
-
+        if drop_type == 'file' or drop_type == 'load':
+            if save_extension == None:
+                return
+            p = pathlib.Path(file_path).name
+            with open(p+save_extension, 'wb') as file:
+                file.write(results)
+        
+        elif drop_type == 'text':
+            p = asksaveasfilename(filetypes = (("Text files", "*.txt"), ("All files", "*.*")))
+            with open(p, 'w') as file:
+                file.write(results)
 
 def center_app(master, width, height):
     #This is a function responsible for making sure
@@ -158,6 +217,7 @@ def insert(text):
     text_area.delete(0.0, END)
     text_area.insert(0.0,text)
     text_area.config(state = DISABLED)
+    statusbar_label.config(fg = 'green')
     status_variable.set('Done')
 
 def isbase64(text):
@@ -242,11 +302,75 @@ def get_file_type(filename):
         elif file_type == 'text/xml':
             save_extension = '.xml'
 
+def write_to_temp():
+    global temp_file_name
+    #This function writes the data to a temporary file.
+    __, temp_file_name = tempfile.mkstemp()
+    if mode_variable.get() == 'encode':
+        with open(temp_file_name, 'w') as file:
+            file.write(results)
+        os.close(__)
+        temp_files.append(temp_file_name)
+    elif mode_variable.get() == 'decode':
+        with open(temp_file_name, 'wb') as file:
+            file.write(results)
+        os.close(__)
+        temp_files.append(temp_file_name)
+        get_file_type(temp_file_name)
+
+def load_file():
+    global file_path
+    global results
+    global drop_type
+    #This is, if the user wants to encode or decode through loading a file.
+    filename = askopenfilename(title= 'Choose File')
+    mode = mode_variable.get()
+    if filename == '':
+        return
+    drop_type = 'load'
+    file_path = filename
+    if mode == 'encode':
+        contents = file_contents(filename)
+        type_ = contents[1]
+        data = contents[0]
+        results = encode(data, type_)
+        if not is_file_large(filename):
+            insert(results)
+            write_to_temp()
+        else:
+            insert(results[:20000])
+            statusbar_label.config(fg = 'black')
+            status_variable.set("File too large to display all output.")
+            write_to_temp()
+    elif mode == 'decode':
+        contents = file_contents(filename)
+        data = contents[0]
+        type_ = contents[1]
+        if isbase64(data) != True:
+                statusbar_label.config(fg = 'red')
+                status_variable.set('Sorry, file is not base64')
+                return
+        results = decode(data, type_)
+        if not is_file_large(filename):
+            insert(results)
+            write_to_temp()
+        else:
+            insert(results[:20000])
+            statusbar_label.config(fg = 'black')
+            status_variable.set("File too large to display all output.")
+            write_to_temp()
+
 def drop_enter(event):
     #This is what happens when a file enters the widget
-    statusbar_label.config(fg = 'green')
-    status_variable.set('Preparing to {}.'.format(mode_variable.get()))
-    return event.action
+    if auto_detect_variable.get() == 'detect': #That is, if the mode is set to auto-detect.
+        statusbar_label.config(fg = 'black')
+        status_variable.set("Detecting...")
+        return event.action
+    if not auto_detect_variable.get():
+        #If auto-detect mode is on, it overrides everything.
+        statusbar_label.config(fg = 'green')
+        status_variable.set('Preparing to {}.'.format(mode_variable.get()))
+        return event.action
 
 def file_contents(file_path):
     #This function is responsible for opening a file and returning its contents.
@@ -260,76 +384,92 @@ def file_contents(file_path):
             return contents, 'binary'
 def drop_file(event):
     global drop_type
-    global temp_file_name
     global results
     global file_path
-    #When someone drops a file or folder.
-    if mode_variable.get() == 'encode':
+    global checked
+    status_variable.set('')
+    if not auto_detect_variable.get() or checked == True:
+        #When someone drops a file or folder.
+        if mode_variable.get() == 'encode':
+            is_file_or_directory = file_or_dir(event.data)
+            if is_file_or_directory[0] == 'directory':
+                statusbar_label.config(fg = 'red')
+                status_variable.set('Sorry, cannot {} a folder'.format(mode_variable.get()))
+            else:
+                drop_type = 'file'
+                path = is_file_or_directory[1]
+                file_path = path
+                contents = file_contents(path)
+                type_ = contents[1]
+                data = contents[0]
+                results = encode(data, type_)
+                if not is_file_large(path):
+                    insert(results) #The results are inserted into the text area.
+                    write_to_temp()
+                    checked = False
+
+                else:
+                    write_to_temp()
+                    insert(results[:20000])
+                    statusbar_label.config(fg = 'black')
+                    status_variable.set("File too large to display all output.")
+                    checked = False
+        else:
+            is_file_or_directory = file_or_dir(event.data)
+            if is_file_or_directory[0] == 'directory':
+                statusbar_label.config(fg = 'red')
+                status_variable.set('Sorry, cannot {} a folder'.format(mode_variable.get()))
+            else:
+                path = is_file_or_directory[1]
+                file_path = path
+                contents = file_contents(path)
+                type_ = contents[1]
+                data = contents[0]
+                if isbase64(data) != True:
+                    statusbar_label.config(fg = 'red')
+                    status_variable.set('Sorry, file is not base64')
+                else:
+                    results = decode(data, type_)
+                    if not is_file_large(path):
+                        insert(results) #The results are inserted into the text area.
+                        write_to_temp()
+                        checked = False
+                    else:
+                        insert(results[:20000])
+                        statusbar_label.config(fg = 'black')
+                        status_variable.set("File too large to display all output.")
+                        write_to_temp()
+                        checked = False
+                
+
+    else:
         is_file_or_directory = file_or_dir(event.data)
         if is_file_or_directory[0] == 'directory':
             statusbar_label.config(fg = 'red')
-            status_variable.set('Sorry, cannot {} a folder'.format(mode_variable.get()))
+            variable.set('Sorry, cannot work with a folder')
         else:
             drop_type = 'file'
             path = is_file_or_directory[1]
             file_path = path
             contents = file_contents(path)
-            type_ = contents[1]
-            data = contents[0]
-            results = encode(data, type_)
-            if not is_file_large(path):
-                insert(results) #The results are inserted into the text area.
-                __, temp_file_name = tempfile.mkstemp()
-                with open(temp_file_name, 'w') as file:
-                    file.write(results)
-                os.close(__)
-                temp_files.append(temp_file_name)
+            if isbase64(contents[0]):
+                mode_variable.set('decode')
+                checked = True
+                drop_file(event)
+                #After auto-detect mode detects a mode for the application, the code calls the drop_file
+                #function again, in order not to lead to recursion, we set a variable to monitor if a dropped
+                #file's mode has been detected or not.
 
             else:
-                __, temp_file_name = tempfile.mkstemp()
-                with open(temp_file_name, 'w') as file:
-                    file.write(results)
-                os.close(__)
-                temp_files.append(temp_file_name)
-                insert(results[1:20000])
-                statusbar_label.config(fg = 'black')
-                status_variable.set("File too large to display all output.")
-    else:
-        is_file_or_directory = file_or_dir(event.data)
-        if is_file_or_directory[0] == 'directory':
-            statusbar_label.config(fg = 'red')
-            status_variable.set('Sorry, cannot {} a folder'.format(mode_variable.get()))
-        else:
-            path = is_file_or_directory[1]
-            file_path = path
-            contents = file_contents(path)
-            type_ = contents[1]
-            data = contents[0]
-            if isbase64(data) != True:
-                statusbar_label.config(fg = 'red')
-                status_variable.set('Sorry, file is not base64')
-            else:
-                results = decode(data, type_)
-                if not is_file_large(path):
-                    insert(results) #The results are inserted into the text area.
-                    __, temp_file_name = tempfile.mkstemp()
-                    with open(temp_file_name, 'wb') as file:
-                        file.write(results)
-                    os.close(__)
-                    get_file_type(temp_file_name)
-                    temp_files.append(temp_file_name)
-                else:
-                    insert(results[1:20000])
-                    status_variable.set("File too large to display all output.")
-                    __, temp_file_name = tempfile.mkstemp()
-                    with open(temp_file_name, 'wb') as file:
-                        file.write(results)
-                    os.close(__)
-                    get_file_type(temp_file_name)
-                    temp_files.append(temp_file_name)
+                mode_variable.set('encode')
+                checked = True
+                drop_file(event)
+
+
                 
+
+
 def drop_text(event):
-    global temp_file_name
     global drop_type
     global results
     if mode_variable.get() == 'encode':
@@ -337,22 +477,26 @@ def drop_text(event):
         results = encode(event.data, 'normal')
         if len(results) <= 20000:
             insert(results)
-            __, temp_file_name = tempfile.mkstemp()
-            with open(temp_file_name, 'w') as file:
-                file.write(results)
-            os.close(__)
-            temp_files.append(temp_file_name)
+            write_to_temp()
         else:
             insert(results[1:20000])
             statusbar_label.config(fg ='black')
             status_variable.set("Text  too large to display all output.")
+            write_to_temp()
     elif mode_variable.get() == 'decode':
         if isbase64(event.data) != True:
             statusbar_label.config(fg = 'red')
             status_variable.set('Sorry, text is not base64')
         else:
             results = decode(event.data, 'normal')
-            insert(results)
+            if len(results) <= 20000:
+                insert(results)
+                write_to_temp()
+            else:
+                insert(results[1:20000])
+                statusbar_label.config(fg ='black')
+                status_variable.set("Text  too large to display all output.")
+                write_to_temp()
 
 def drop_leave(event):
     #This is what happens when a widget leaves the window
@@ -368,6 +512,23 @@ def encode(data, data_type):
 def decode(data, data_type):
     if data_type == 'normal':
         return base64.b64decode(data)
+
+
+def init_configuration():
+    global mode_variable
+    global mode
+    try:
+        configuration = ConfigParser()
+        configuration.read('configuration.ini')
+        mode = configuration['general'].get('default_mode')
+        if mode == 'detect':
+            auto_detect_variable.set(1)
+        mode_variable.set(mode)
+    except:
+        mode = 'encode'
+        mode_variable.set('encode')
+
+init_configuration()
 #===========================================================
 #Frames 
 #===================================
@@ -378,6 +539,7 @@ statusbar_frame = LabelFrame(root)
 #=========================================
 #Controls_frame widgets
 mode_encode = ttk.Radiobutton(controls_frame, text = 'encode', variable = mode_variable, value = 'encode')
+mode_auto_detect = ttk.Checkbutton(controls_frame, text = 'Auto-detect', variable = auto_detect_variable)
 mode_decode = ttk.Radiobutton(controls_frame, text = 'decode', variable = mode_variable, value = 'decode')
 #=================================================================================================
 #Text Frame widgets
@@ -398,6 +560,7 @@ statusbar_frame.grid(row = 2, column = 0, sticky = W+E, columnspan = 2)
 #========================================
 #   Widgets
 mode_encode.grid(row = 0, column = 0, sticky = W)
+mode_auto_detect.grid(row = 0, column = 0)
 mode_decode.grid(row = 0, column = 2)
 text_area.grid(row = 0, column = 0, sticky = N+E+W+S)
 statusbar_label.grid(row = 0, column = 0)
@@ -421,9 +584,12 @@ file_frame.dnd_bind('<<Drop:DND_Text>>', drop_text)
 file_frame.dnd_bind('<<DropLeave>>', drop_leave)
 #==============================================================================
 text_area.bind("<Button-3>", Menubar.rightclick_menu_results)
+file_frame.bind("<Button-3>", Menubar.rightclick_menu_file)
 root.config(menu = menubar)
 root.resizable(width = True, height = False)
 menu = Menubar(menubar)
+#===========================================
+
 #===========================================
 #   Centering the application
 root.update()
@@ -444,4 +610,24 @@ try:
 except FileNotFoundError:
     pass
 
+#========================
+# Configuration
+#========================
+configuration = ConfigParser()
+try:
+    default_mode = default_mode.get()
+except NameError:
+    try:
+        configuration.read('configuration.ini')
+        default_mode = configuration['general'].get('default_mode')
+        mode_variable.set('default_mode')
+    except:
+        default_mode = 'encode'
+        mode_variable.set('encode')
+#========================
 
+configuration['general'] = {
+    'default_mode'  : default_mode
+}
+with open('configuration.ini', 'w') as file:
+    configuration.write(file)
