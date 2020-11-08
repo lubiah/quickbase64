@@ -6,12 +6,15 @@ Can I get a star :star: - I would really appreciate it. :smile:
 
 -------------------
 
-[![Github All Releases](https://img.shields.io/github/downloads/biah/quickbase64/total.svg)]() 
+ [![Website shields.io](https://img.shields.io/website-up-down-green-red/http/eakloe.com.svg)](http://www.eakloe.com)    [![Github all releases](https://img.shields.io/github/downloads/biah/quickbase64/total.svg)](https://GitHub.com/Biah/quickbase64/releases/)
+
 ![](https://forthebadge.com/images/badges/open-source.svg) [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
+
+[![GitHub forks](https://img.shields.io/github/forks/biah/quickbase64.svg?style=social&label=Fork&maxAge=2592000)](https://GitHub.com/Biah/quickbase64/network/)[![GitHub stars](https://img.shields.io/github/stars/Biah/quickbase64.svg?style=social&label=Star&maxAge=2592000)](https://GitHub.com/Biah/Quickbase64/stargazers/)
 
 --------------------------------
 
-<img src="readme/auto_detect_gif.gif" alt="Auto-detect gif" style="zoom: 67%;display:inline-block;" width: />
+<img src="readme/auto_detect_gif.gif" alt="Auto-detect gif" style="zoom: 67%;display:inline-block;" width: /> 
 
 *Quick Base64 auto-detection mode allows the application to automatically detect the mode for your file. It switches the mode to encode if your file needs to be encoded or switches it to decode if your file needs to be decoded.*
 
@@ -75,7 +78,7 @@ If mode is:
 
    ​	mime-type using the command `file --mime-type temporary_file` . An extension is then generated from the mime-type of the 	    	contents.
 
-## Why use Quick Base64? 
+## Why use Quick Base64?
 
 There are many base64 encoders out there. The reason why Quick Base64 is unique is that:
 * It's simple to use.
