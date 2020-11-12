@@ -44,6 +44,11 @@ temp_file_name = ''
 drop_type = None #In saving, this checks whether a file or text was dropped
 temp_files = [] #This is an array which contains a list of temporary files created.
 checked = False #This is used in auto-detect mode to check if a files mode has been detected.
+configurations = {
+    'default_mode':'encode',
+    'sys_argv_mode': None,
+    'output_dir' : 'output'
+    } #The default settings for configuration
 #======================================
 #Functions and classes
 #===========================================
@@ -62,7 +67,7 @@ class Menubar:
             text_label = Label(about_menu, text = '''An open-source base64 file encoder which can encode your files to base64 format.\nIt can also decode your base64 text to it\'s original file.''', font = ('Calibri', 13)).grid(row = 1, column = 0)
             site_link = linklabel.LinkLabel(about_menu, text = 'Website: https://www.eakloe.com/quickbase64', font = ('Calibri', 13), link = 'https://www.eakloe.com/quickbase64', cursor = 'hand2').grid(row = 2, column = 0)
             code_link = linklabel.LinkLabel(about_menu, text = 'Source code: https://www.github.com/biah/quickbase64', font = ('Calibri', 13), link = 'https://www.github.com/quickbase64', cursor = 'hand2').grid(row = 3, column = 0)
-            version_label = Label(about_menu, text = 'Version : 0.1.0',font = ('Calibri', 20)).grid(row = 4, column = 0)
+            version_label = Label(about_menu, text = 'Version : 0.1.0',font = ('Calibri', 15)).grid(row = 4, column = 0)
             #=====================================================
             about_menu.update()
             height = about_menu.winfo_height()
@@ -85,41 +90,59 @@ class Menubar:
 
     def settings(self):
         def show():
-            global mode
-            global default_mode
             global settings_menu
-
-            def change_mode():
-                #When a user changes a RadioButton, this function changes the mode variable's value.
-                global mode
-                mode = default_mode.get()
-
+            def save_command():
+                configurations['default_mode'] = default_mode.get()
+                configurations['sys_argv_mode'] = sys_argv_variable.get()
+                configurations['output_dir'] = path_entry_variable.get()
+                settings_menu.destroy()
+            def select_dir():
+                path = askdirectory()
+                path_entry_variable.set(path)
             #======================================
             settings_menu = Toplevel()
+            settings_menu.transient(root)
             settings_menu.resizable(False, False)
-            settings_menu.update()
-            #settings_menu.resizable(False, False) #This prevents the user from resizing the dialog
             notebook = ttk.Notebook(settings_menu)
             notebook.grid(row = 0, column = 0)
-            #==============================================default_mode = StringVar().set('encode')
+            #==============================================
+            default_mode = StringVar().set('encode')
             default_mode = StringVar()
-            default_mode.set(mode)
+            path_entry_variable = StringVar()
+            sys_argv_variable = IntVar()
+            #----------------------------------
+            default_mode.set(configurations['default_mode'])
+            sys_argv_variable.set(configurations['sys_argv_mode'])
+            path_entry_variable.set(configurations['output_dir'])
             #==============================================
             style = ttk.Style()
             #==============================================
             general_settings = ttk.Frame(notebook)
             mode_frame = ttk.LabelFrame(general_settings, text = 'Default mode')
-            encode_mode = ttk.Radiobutton(mode_frame, text = 'Encode',command = change_mode, variable = default_mode, value = 'encode', style = 'TRadiobutton')
+            encode_mode = ttk.Radiobutton(mode_frame, text = 'Encode', variable = default_mode, value = 'encode', style = 'TRadiobutton')
             encode_mode.grid(row = 0, column = 0, sticky = W+E)
-            decode_mode = ttk.Radiobutton(mode_frame, text = 'Decode', variable = default_mode,command = change_mode, value = 'decode', style = 'TRadiobutton')
+            decode_mode = ttk.Radiobutton(mode_frame, text = 'Decode', variable = default_mode, value = 'decode', style = 'TRadiobutton')
             decode_mode.grid(row = 1, column = 0, sticky = W+E)
-            auto_detect = ttk.Radiobutton(mode_frame, text = 'Auto-detect', variable = default_mode,command = change_mode,value = 'detect', style = 'TRadiobutton')
+            auto_detect = ttk.Radiobutton(mode_frame, text = 'Auto-detect', variable = default_mode,value = 'detect', style = 'TRadiobutton')
             auto_detect.grid(row = 2, column = 0, sticky = W+E)
-            mode_frame.grid(row = 0,column = 0, ipadx = 25, ipady = 5)
+            mode_frame.grid(row = 0,column = 0, ipadx = 25, ipady = 5, pady = 10, sticky = W)
+            #
+            sys_argv_frame = ttk.LabelFrame(general_settings, text = 'Drop file and work on app start?')
+            yes_radiobutton = ttk.Radiobutton(sys_argv_frame, text  = 'Yes', variable = sys_argv_variable, value = 1).grid(row = 0, column = 0)
+            no_radiobutton = ttk.Radiobutton(sys_argv_frame, text = 'No', variable = sys_argv_variable, value = 0).grid(row = 1, column = 0)
+            sys_argv_frame.grid(row = 1, column = 0, ipadx = 25, ipady =5, sticky = W)
+            #
             general_settings.grid(row = 0, column = 0)
             #=============================================
+           
+            #=============================================
             notebook.add(general_settings,text =  'General')
+            confirmation_frame = Frame(settings_menu)
+            button_ok = ttk.Button(confirmation_frame, text = 'OK', command = save_command).grid(row = 0, column = 0)
+            button_cancel = ttk.Button(confirmation_frame, text = 'Cancel', command = lambda: settings_menu.destroy()).grid(row = 0, column = 1)
+            confirmation_frame.grid(row = 1, column = 0)
             #===============================================
+            settings_menu.update()
             width = settings_menu.winfo_width()
             height = settings_menu.winfo_height()
             geometry = center_app(settings_menu, width, height)
@@ -189,10 +212,11 @@ def save_file():
     if mode == 'encode':
         if drop_type == 'file' or drop_type == 'load':
             p = pathlib.Path(file_path).name
+            directory = pathlib.Path(configurations['output_dir'])
             with open(p+'.txt', 'w') as file:
                 file.write(results)
         elif drop_type == 'text':
-            p = asksaveasfilename(filetypes = (("Text files", "*.txt"), ("All files", "*.*")))
+            p = asksaveasbfilename(filetypes = (("Text files", "*.txt"), ("All files", "*.*")))
             if p == '':
                 return
             with open(p, 'w') as file:
@@ -693,53 +717,106 @@ def decode(data, data_type):
 
 def sys_argv():
     #This function is activated when a user drops a file onto 
-    #Quick Base64.
-    global checked
-    global results
-    global file_path
-    if len(sys.argv) > 1:
-        file_path = sys.argv[1]
-        if not auto_detect_variable.get() or checked == True:
-            if mode_variable.get() == 'encode':
+    #Quick Base64's exe file.
+    #Well, this option can be disabled or enabled.
+    if configurations['sys_argv_mode'] == '1':
+        global drop_type
+        global checked
+        global results
+        global file_path
+        if len(sys.argv) > 1:
+            file_path = sys.argv[1]
+            drop_type = 'file'
+            if not auto_detect_variable.get() or checked == True:
+                if mode_variable.get() == 'encode':
+                    is_file_or_directory = file_or_dir(file_path)
+                    if is_file_or_directory[0] == 'directory':
+                        statusbar_label.config(fg = 'red')
+                        status_variable.set('Sorry, cannot {} a folder'.format(mode_variable.get()))
+                    else:
+                        drop_type = 'file'
+                        path = is_file_or_directory[1]
+                        file_path = path
+                        contents = file_contents(path)
+                        type_ = contents[1]
+                        data = contents[0]
+                        results = encode(data, type_)
+                        if not is_file_large(path):
+                            insert(results) #The results are inserted into the text area.
+                            write_to_temp()
+                            checked = False
+                        else:
+                            insert(results[:20000])
+                            write_to_temp()
+                            checked = False
+                            statusbar_label.config(fg ='black')
+                            status_variable.set("Text  too large to display all output.")
+                else:
+                    is_file_or_directory = file_or_dir(file_path)
+                    if is_file_or_directory[0] == 'directory':
+                        statusbar_label.config(fg = 'red')
+                        status_variable.set('Sorry, cannot {} a folder'.format(mode_variable.get()))
+                    else:
+                        path = is_file_or_directory[1]
+                        file_path = path
+                        contents = file_contents(path)
+                        type_ = contents[1]
+                        data = contents[0]
+                        if isbase64(data) != True:
+                            statusbar_label.config(fg = 'red')
+                            status_variable.set('Sorry, file is not base64')
+                        else:
+                            results = decode(data, type_)
+                            if not is_file_large(path):
+                                insert(results) #The results are inserted into the text area.
+                                write_to_temp()
+                                checked = False
+                            else:
+                                insert(results[:20000])
+                                statusbar_label.config(fg = 'black')
+                                status_variable.set("File too large to display all output.")
+                                write_to_temp()
+                                checked = False
+
+
+            else:
                 is_file_or_directory = file_or_dir(file_path)
-            if is_file_or_directory[0] == 'directory':
-                statusbar_label.config(fg = 'red')
-                status_variable.set('Sorry, cannot {} a folder'.format(mode_variable.get()))
-            else:
-                drop_type = 'file'
-                path = is_file_or_directory[1]
-                file_path = path
-                contents = file_contents(path)
-                type_ = contents[1]
-                data = contents[0]
-                results = encode(data, type_)
-                if not is_file_large(path):
-                    insert(results) #The results are inserted into the text area.
-                    write_to_temp()
-                    checked = False
-                
-        else:
-            if (isbase64(file_path)):
-                mode_variable.set('decode')
-                checked = True
-                sys_argv()
-            else:
-                mode_variable.set('encode')
-                checked = True
-                sys_argv()
+                if is_file_or_directory[0] == 'directory':
+                    statusbar_label.config(fg = 'red')
+                    variable.set('Sorry, cannot work with a folder')
+                else:
+                    drop_type = 'file'
+                    path = is_file_or_directory[1]
+                    file_path = path
+                    contents = file_contents(path)
+                    if isbase64(contents[0]):
+                        mode_variable.set('decode')
+                        checked = True
+                        sys_argv()
+                    else:
+                        mode_variable.set('encode')
+                        checked = True
+                        sys_argv()
 
 def init_configuration():
+    # Note:
     global mode_variable
     global mode
     try:
-        configuration = ConfigParser()
-        configuration.read('configuration.ini')
-        mode = configuration['general'].get('default_mode')
+        config = ConfigParser()
+        config.read('configuration.ini')
+        mode = config['general'].get('default_mode')
+        sys_argv_mode = config['general'].get('sys_argv_mode')
+        #____________________________________________________________
+        configurations['default_mode'] = mode
+        configurations['sys_argv_mode'] = sys_argv_mode
         if mode == 'detect':
             auto_detect_variable.set(1)
         mode_variable.set(mode)
     except:
         mode = 'encode'
+        configurations['default_mode'] = mode
+        configurations['sys_argv_mode'] = 1
         mode_variable.set('encode')
 
 init_configuration()
@@ -829,20 +906,11 @@ except FileNotFoundError:
 # Configuration
 #========================
 configuration = ConfigParser()
-try:
-    default_mode = default_mode.get()
-except NameError:
-    try:
-        configuration.read('configuration.ini')
-        default_mode = configuration['general'].get('default_mode')
-        mode_variable.set('default_mode')
-    except:
-        default_mode = 'encode'
-        mode_variable.set('encode')
 #========================
 
 configuration['general'] = {
-    'default_mode'  : default_mode
+    'default_mode'  : configurations['default_mode'],
+    'sys_argv_mode' : configurations['sys_argv_mode'],
 }
 with open('configuration.ini', 'w') as file:
     configuration.write(file)
