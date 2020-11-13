@@ -21,7 +21,7 @@ import base64
 import pathlib
 from os import path
 from subprocess import Popen, PIPE
-from os.path import getsize, splitext
+from os.path import getsize, splitext, realpath
 import tempfile
 from configparser import ConfigParser
 import sys
@@ -44,10 +44,18 @@ temp_file_name = ''
 drop_type = None #In saving, this checks whether a file or text was dropped
 temp_files = [] #This is an array which contains a list of temporary files created.
 checked = False #This is used in auto-detect mode to check if a files mode has been detected.
+file_path = ''
+#=====================================================================================
+# Constants
+PICTURES = ['.jpg','.jif','jfif','.jpe', '.png', '.ico', '.jpeg','.gif', '.tiff','.vda','.vst','.tif','.icb','.icns','.webp', '.ppm','.pgm', '.pnm', '.pbm', '.tga', '.pcx', '.jp2','.j2k', '.jpf','jpx','jpm','mj2', 'raw', 'bmp', 'xpm']
+AUDIOS = ['.mp3','.m4r', '.wav','.m4p','m4a', '.pcm','.aiff','.aif', '.aac', '.ogg', '.wma', '.flac', '.alac','.aifc', '.3ga', '.aa','.act', '.al','.bap','.cda','.mp2','.mpa','.oga']
+VIDEOS = ['.mp4','.m4b','.avi','.qt','.mov','.wmv','.flv','.avchd','.webm','.mkv','.ogv','.dirac', '.mpg', '.mpeg','.3gp','.nsv','.3g2','.svi','.m4v']
+#=====================================================================================
 configurations = {
     'default_mode':'encode',
     'sys_argv_mode': None,
-    'output_dir' : 'output'
+    'output_dir' : 'output',
+    'temp_dir' : tempfile.gettempdir()
     } #The default settings for configuration
 #======================================
 #Functions and classes
@@ -82,8 +90,12 @@ class Menubar:
 
     def main(self):
         menu = Menu(self.menubar, tearoff = 0)
-        menu.add_command(label = 'Settings', command = lambda : Menubar.settings(self))
         menu.add_command(label = 'About', command = lambda: Menubar.about(self))
+        menu.add_separator()
+        menu.add_command(label = 'New Window', command = new_window)
+        menu.add_command(label = 'Restart Window', command = restart)
+        menu.add_separator()
+        menu.add_command(label = 'Settings', command = lambda : Menubar.settings(self))
         menu.add_separator()
         menu.add_command(label = 'Quit', command = lambda: root.quit())
         self.menubar.add_cascade(label = 'More...', menu = menu) 
@@ -95,10 +107,15 @@ class Menubar:
                 configurations['default_mode'] = default_mode.get()
                 configurations['sys_argv_mode'] = sys_argv_variable.get()
                 configurations['output_dir'] = path_entry_variable.get()
+                configurations['temp_dir'] = temp_dir_variable.get()
                 settings_menu.destroy()
             def select_dir():
                 path = askdirectory()
                 path_entry_variable.set(path)
+            def select_temp_dir():
+                #Function for choosing temporary tempfiles directory.
+                path = askdirectory()
+                temp_dir_variable.set(path)
             #======================================
             settings_menu = Toplevel()
             settings_menu.transient(root)
@@ -110,10 +127,12 @@ class Menubar:
             default_mode = StringVar()
             path_entry_variable = StringVar()
             sys_argv_variable = IntVar()
+            temp_dir_variable = StringVar()
             #----------------------------------
             default_mode.set(configurations['default_mode'])
             sys_argv_variable.set(configurations['sys_argv_mode'])
             path_entry_variable.set(configurations['output_dir'])
+            temp_dir_variable.set(configurations['temp_dir'])
             #==============================================
             style = ttk.Style()
             #==============================================
@@ -134,9 +153,22 @@ class Menubar:
             #
             general_settings.grid(row = 0, column = 0)
             #=============================================
-           
+            path_settings = ttk.Frame(notebook)
+            #
+            output_dir_frame = ttk.LabelFrame(path_settings, text = 'Output directory')
+            path_entry = ttk.Entry(output_dir_frame, textvariable = path_entry_variable, state = 'disabled', width = 40).grid(row = 0, column = 0)
+            browse_button =  ttk.Button(output_dir_frame, text = 'Browse...', command = select_dir).grid(row = 0, column = 1)
+            output_dir_frame.grid(row = 0, column = 0)
+            #
+            temp_folder_frame = ttk.LabelFrame(path_settings, text = 'Temporary folder path')
+            temp_path_entry = ttk.Entry(temp_folder_frame, textvariable = temp_dir_variable, state = 'disabled', width = 40).grid(row = 0, column = 0)
+            browse_button = ttk.Button(temp_folder_frame, text = 'Browse...', command = select_temp_dir).grid(row = 0, column = 1)
+            temp_folder_frame.grid(row = 1, column = 0)
+            #
+            path_settings.grid(row = 0, column = 0)
             #=============================================
             notebook.add(general_settings,text =  'General')
+            notebook.add(path_settings, text = 'Paths')
             confirmation_frame = Frame(settings_menu)
             button_ok = ttk.Button(confirmation_frame, text = 'OK', command = save_command).grid(row = 0, column = 0)
             button_cancel = ttk.Button(confirmation_frame, text = 'Cancel', command = lambda: settings_menu.destroy()).grid(row = 0, column = 1)
@@ -157,14 +189,32 @@ class Menubar:
 
     def rightclick_menu_results(event):
         save_state = DISABLED
-        if temp_file_name != '':
+        copy_html_state = DISABLED
+        if temp_file_name != '': #If the temp_file_name is empty.
             save_state = NORMAL
+            copy_html_state = NORMAL
+            copy_css_state = NORMAL
+        if drop_type == 'text' or mode_variable.get() == 'decode': #If drop_type is text or mode is decode
+            copy_html_state = DISABLED
+            copy_css_state = DISABLED
         elif drop_type == 'text':
             save_state = NORMAL
+        
+        suffix = str(pathlib.Path(file_path).suffix).lower()
+        if (suffix  in PICTURES) or (suffix in AUDIOS) or (suffix in VIDEOS):
+            copy_html_state = NORMAL
+        else:
+            copy_html_state = DISABLED
+        if suffix in PICTURES:
+            copy_css_state = NORMAL
+        else:
+            copy_css_state = DISABLED
         menu = Menu(menubar, tearoff = 0)
         menu.add_command(label = 'Save', command = save_file, state = save_state)
         menu.add_command(label = 'Save (Give ext.)', command = save_file_manual, state = save_state)
         menu.add_command(label = 'Copy', command = copy_to_clipboard, state = save_state)
+        menu.add_command(label = 'Copy (HTML)', command = copy_html, state = copy_html_state)
+        menu.add_command(label = 'Copy (CSS)', command = copy_css, state = copy_css_state)
         menu.tk_popup(event.x_root, event.y_root)
 
     def rightclick_menu_file(event):
@@ -183,6 +233,7 @@ class Menubar:
         menu.add_command(label = 'Clipboard (File)', state = file_state, command = load_file_clipboard)
         menu.add_command(label = 'Clipboard (Text)', state = text_state, command = load_text_clipboard)
         menu.tk_popup(event.x_root, event.y_root)
+
 
 def copy_to_clipboard():
     if type(results) == str:
@@ -204,21 +255,34 @@ def save_file_manual():
         with open(filename, 'wb') as file:
             file.write(results)
 
-
+def restart():
+    os.startfile(__file__)
+    root.quit()
+    
+def new_window():
+    os.startfile(__file__)
 
 def save_file():
     #Just saves a file
     mode = mode_variable.get()
-    if mode == 'encode':
+    directory = pathlib.Path(configurations['output_dir'])
+    try:
+        if str(directory) == 'output':
+           os.mkdir('output')
+    except FileExistsError:
+        pass
+    if mode == 'encode':  
         if drop_type == 'file' or drop_type == 'load':
-            p = pathlib.Path(file_path).name
-            directory = pathlib.Path(configurations['output_dir'])
-            with open(p+'.txt', 'w') as file:
+            p = pathlib.Path(file_path).name       
+            path = str(directory.joinpath(p))
+            with open(path + '.txt', 'w') as file:
                 file.write(results)
         elif drop_type == 'text':
-            p = asksaveasbfilename(filetypes = (("Text files", "*.txt"), ("All files", "*.*")))
+            p = asksaveasfilename(filetypes = (("Text files", "*.txt"), ("All files", "*.*")))
             if p == '':
                 return
+            print(p)
+            path = str(directory.joinpath(p))
             with open(p, 'w') as file:
                 file.write(results)
     elif mode == 'decode':
@@ -226,7 +290,8 @@ def save_file():
             if save_extension == None:
                 return
             p = pathlib.Path(file_path).name
-            with open(p+save_extension, 'wb') as file:
+            path = str(directory.joinpath(p))
+            with open(path+save_extension, 'wb') as file:
                 file.write(results)
         
         elif drop_type == 'text':
@@ -275,7 +340,7 @@ def load_text_clipboard():
                     write_to_temp()
                     checked = False
                 else:
-                    insert(results[1:20000])
+                    insert(results[:20000])
                     statusbar_label.config(fg ='black')
                     status_variable.set("Text  too large to display all output.")
                     write_to_temp()
@@ -441,52 +506,72 @@ def get_file_type(filename):
         print("File type is ", file_type)
         if file_type == 'text/plain':
             save_extension = '.txt'
+            return file_type
         elif file_type == 'audio/mpeg':
             save_extension = '.mp3'
+            return file_type
         elif file_type == 'application/x-dosexec':
             save_extension = '.exe'
+            return file_type
         elif file_type == 'application/x-font-tff':
             save_extension = '.ttf'
+            return file_type
         elif file_type == 'image/png':
             save_extension = '.png'
+            return file_type
         elif file_type == 'image/gif':
             save_extension = '.gif'
+            return file_type
         elif file_type == 'application/octet-stream':
             save_extension = '.txt'
+            return file_type
         elif file_type == 'text/html':
             save_extension = '.html'
+            return file_type
         elif file_type == 'text/rtf':
             save_extension = '.rtf'
+            return file_type
         elif file_type == 'text/x-c++':
             save_extension = '.cpp'
+            return file_type
         elif file_type == 'text/x-python':
             save_extension = '.py'
+            return file_type
         elif file_type == 'text/x-msdos-batch':
             save_extension = '.bat'
+            return file_type
         elif file_type == 'text/x-php':
             save_extension = '.php'
+            return file_type
         elif file_type == 'application/zip':
             save_extension = '.zip'
+            return file_type
         elif file_type == 'application/x-gzip':
             save_extension = '.tar'
+            return file_type
         elif file_type == 'text/xml':
             save_extension = '.xml'
+            return file_type
 
 def write_to_temp():
     global temp_file_name
-    #This function writes the data to a temporary file.
-    __, temp_file_name = tempfile.mkstemp()
-    if mode_variable.get() == 'encode':
-        with open(temp_file_name, 'w') as file:
-            file.write(results)
-        os.close(__)
-        temp_files.append(temp_file_name)
-    elif mode_variable.get() == 'decode':
-        with open(temp_file_name, 'wb') as file:
-            file.write(results)
-        os.close(__)
-        temp_files.append(temp_file_name)
-        get_file_type(temp_file_name)
+    try:
+        #This function writes the data to a temporary file.
+        __, temp_file_name = tempfile.mkstemp(dir = configurations['temp_dir'])
+        if mode_variable.get() == 'encode':
+            with open(temp_file_name, 'w') as file:
+                file.write(results)
+            os.close(__)
+            temp_files.append(temp_file_name)
+        elif mode_variable.get() == 'decode':
+            with open(temp_file_name, 'wb') as file:
+                file.write(results)
+            os.close(__)
+            temp_files.append(temp_file_name)
+            get_file_type(temp_file_name)
+    except FileNotFoundError:
+        os.mkdir(configurations['output'])
+        write_to_temp()
 
 def load_file(filename = None):
     #In auto-detect mode, if the filename == None, it means the file's mode 
@@ -573,6 +658,36 @@ def file_contents(file_path):
         with open(file_path, 'rb') as file:
             contents = file.read()
             return contents, 'binary'
+        
+def copy_html():
+    #Copy to clipboard for embeddding in HTML
+    path_suffix = str(pathlib.Path(file_path).suffix).lower()
+    if drop_type == 'file' or drop_type == 'load':
+        if path_suffix in PICTURES:
+            code = '"data:image/%s;base64,%s"' % (path_suffix[1:], results)
+            pyperclip.copy(code)
+        elif path_suffix in AUDIOS:
+            code = '"data:audio/%s;base64,%s"' % (path_suffix[1:], results)
+            pyperclip.copy(code)
+        elif path_suffix in VIDEOS:
+            code = '"data:video/%s;base64,%s"' % (path_suffix[1:], results)
+            pyperclip.copy(code)
+            
+            
+def copy_css():
+    #Copy to clipboard for embeddding in CSS
+    path_suffix = str(pathlib.Path(file_path).suffix).lower()
+    if drop_type == 'file' or drop_type == 'load':
+        if path_suffix in PICTURES:
+            code = 'url(data:image/%s;base64,%s)' % (path_suffix[1:], results)
+            pyperclip.copy(code)
+        elif path_suffix in AUDIOS:
+            code = 'url(data:audio/%s;base64,%s)' % (path_suffix[1:], results)
+            pyperclip.copy(code)
+        elif path_suffix in VIDEOS:
+            code = 'url(data:video/%s;base64,%s)' % (path_suffix[1:], results)
+            pyperclip.copy(code)
+            
 def drop_file(event):
     global drop_type
     global results
@@ -668,7 +783,7 @@ def drop_text(event):
                 insert(results)
                 write_to_temp()
             else:
-                insert(results[1:20000])
+                insert(results[:20000])
                 statusbar_label.config(fg ='black')
                 status_variable.set("Text  too large to display all output.")
                 write_to_temp()
@@ -684,7 +799,7 @@ def drop_text(event):
                     write_to_temp()
                     checked = False
                 else:
-                    insert(results[1:20000])
+                    insert(results[:20000])
                     statusbar_label.config(fg ='black')
                     status_variable.set("Text  too large to display all output.")
                     write_to_temp()
@@ -799,7 +914,7 @@ def sys_argv():
                         sys_argv()
 
 def init_configuration():
-    # Note:
+    # This function is for starting and reading the configuration.
     global mode_variable
     global mode
     try:
@@ -807,20 +922,25 @@ def init_configuration():
         config.read('configuration.ini')
         mode = config['general'].get('default_mode')
         sys_argv_mode = config['general'].get('sys_argv_mode')
+        output_dir = config['paths'].get('output_dir')
+        temp_dir = config['paths'].get('temp_dir')
         #____________________________________________________________
         configurations['default_mode'] = mode
         configurations['sys_argv_mode'] = sys_argv_mode
+        configurations['output_dir'] = output_dir
+        configurations['temp_dir'] = temp_dir
         if mode == 'detect':
             auto_detect_variable.set(1)
         mode_variable.set(mode)
     except:
         mode = 'encode'
         configurations['default_mode'] = mode
+        configurations['output_dir'] = 'output'
         configurations['sys_argv_mode'] = 1
+        configurations['temp_dir'] = tempfile.gettempdir()
         mode_variable.set('encode')
 
 init_configuration()
-
 #===========================================================
 #Frames 
 #===================================
@@ -849,14 +969,14 @@ file_frame.grid(row = 0, column = 0, sticky = W+E+N+S)
 text_frame.grid(row = 0, column = 1, sticky = E+W+N+S)
 controls_frame.grid(row = 1, column = 0, columnspan = 2, sticky = W+E+N)
 statusbar_frame.grid(row = 2, column = 0, sticky = W+E, columnspan = 2)
-#========================================
+#==================================================================
 #   Widgets
 mode_encode.grid(row = 0, column = 0, sticky = W)
 mode_auto_detect.grid(row = 0, column = 0)
 mode_decode.grid(row = 0, column = 2)
 text_area.grid(row = 0, column = 0, sticky = N+E+W+S)
 statusbar_label.grid(row = 0, column = 0)
-#=====================================
+#==========================================================
 #   Making widgets stretchable
 root.grid_rowconfigure(0, weight = 1)
 root.grid_columnconfigure(0, weight = 1, minsize = 150)
@@ -891,9 +1011,9 @@ root.geometry("%dx%d+%d+%d" %(geometry[0], geometry[1], geometry[2], geometry[3]
 #===========================================
 sys_argv()
 root.mainloop()
-#============================================================
+#==========================================================================
 #End
-#============================================================
+#==========================================================================
 try:
     #This statement deletes all the temporary files created
     #by the application.
@@ -911,6 +1031,10 @@ configuration = ConfigParser()
 configuration['general'] = {
     'default_mode'  : configurations['default_mode'],
     'sys_argv_mode' : configurations['sys_argv_mode'],
+}
+configuration['paths'] = {
+    'output_dir' : configurations['output_dir'],
+    'temp_dir' : configurations['temp_dir']
 }
 with open('configuration.ini', 'w') as file:
     configuration.write(file)

@@ -7,18 +7,16 @@
         ``````````````````````
 
 
-
-
-
-
 -----------------------------
 Version : 0.1.0 
 Date: 
 -----------------------------
- * Added auto-detect mode. (auto-pilot)
+ * Added auto-detect mode.
  * Added a save feature.
- * Added the ability to select a file using directory navigation.
- * Added settings for you to adjust preferences
+ * Added a feature which allows you to select a file using directory navigation.
+ * Added settings for you to adjust preferences.
+ * Added a feature which allows you to load either a file or text from clipboard into the application.
+
 
 -----------------------------
 Version : Beta Release
