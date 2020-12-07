@@ -36,7 +36,6 @@ root = TkinterDnD.Tk()
 root.iconphoto(True,PhotoImage(data = icon_data))
 root.title('Quick Base64')
 menubar = Menu(root)
-debugwindow = debugwindow.DebugWindow(stdout = True, stderr = True)
 #========================
 #Variables
 save_extension = None #This refers to the extension that the file will be saved in.
@@ -68,6 +67,17 @@ class Menubar:
     def __init__(self, menubar):
         self.menubar = menubar
         Menubar.main(self)
+        
+        
+    def show_debug():
+        def show():
+            global debug_window
+            debug_window = debugwindow.DebugWindow(stdout = True, stderr = True)
+        try:
+            if debug_window.state() == 'normal' or debug_window.state() == 'iconic':
+                debug_window.destroy()
+        except:
+            show()
 
     def about(self):
         def show():
@@ -100,6 +110,8 @@ class Menubar:
         menu.add_command(label = 'Restart Window', command = restart)
         menu.add_separator()
         menu.add_command(label = 'Settings', command = lambda : Menubar.settings(self))
+        menu.add_separator()
+        menu.add_command(label = 'Debug Window', command  = Menubar.show_debug)
         menu.add_separator()
         menu.add_command(label = 'Quit', command = lambda: root.quit())
         self.menubar.add_cascade(label = 'More...', menu = menu) 
@@ -874,15 +886,15 @@ def drop_leave(event):
     status_variable.set('')
 def encode(data, data_type):
     if data_type == 'normal':
-        encoded = base64.b64encode(data.encode()).decode()
+        encoded = pybase64.b64encode(data.encode()).decode()
         return encoded
     else:
-        encoded = base64.b64encode(data).decode()
+        encoded = pybase64.b64encode(data).decode()
         return encoded
 
 def decode(data, data_type):
     if data_type == 'normal':
-        return base64.b64decode(data)
+        return pybase64.b64decode(data, validate = True)
 
 def sys_argv():
     #This function is activated when a user drops a file onto 
