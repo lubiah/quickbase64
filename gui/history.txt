@@ -1,0 +1,32 @@
+        =====================
+            QUICK BASE64
+        =====================
+
+        ```````````````````````
+               History
+        ``````````````````````
+
+-----------------------------
+Version : 0.1.1
+Date: 5 December 2020
+-----------------------------
+* Fixed encode/decode radio buttons not showing.
+* Added preview option
+* Major bug fixes
+-----------------------------
+Version : 0.1.0 
+Date: 13 November 2020
+-----------------------------
+ * Added auto-detect mode.
+ * Fixed right-click context menu not working on system boot.
+ * Added a save feature.
+ * Added a feature which allows you to select a file using directory navigation.
+ * Added settings for you to adjust preferences.
+ * Added a feature which allows you to load either a file or text from clipboard into the application.
+
+
+-----------------------------
+Version : Beta Release
+Date : September 28, 2020
+-----------------------------
+ * Date of birth
