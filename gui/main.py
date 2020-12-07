@@ -19,7 +19,7 @@ from ttkwidgets import linklabel
 from ttkwidgets import debugwindow
 from TkinterDnD2 import *
 import os
-import base64
+import pybase64
 import pathlib
 from os import path
 from subprocess import Popen, PIPE
