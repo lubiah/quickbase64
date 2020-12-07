@@ -295,7 +295,7 @@ def save_file():
     except FileExistsError:
         pass
     if mode == 'encode':  
-        if drbn    op_type == 'file' or drop_type == 'load':
+        if drop_type == 'file' or drop_type == 'load':
             p = pathlib.Path(file_path).name       
             path = str(directory.joinpath(p))
             save_path = path + '.txt'
