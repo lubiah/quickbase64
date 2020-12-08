@@ -8,11 +8,11 @@
 
 -----------------------------
 Version : 0.1.1
-Date: 5 December 2020
+Date: 7 December 2020
 -----------------------------
 * Fixed encode/decode radio buttons not showing.
-* Added preview option
-* Major bug fixes
+* Added preview option.
+* Major bug fixes.
 -----------------------------
 Version : 0.1.0 
 Date: 13 November 2020

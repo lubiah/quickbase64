@@ -58,11 +58,12 @@ configurations = {
     'default_mode':'encode',
     'sys_argv_mode': None,
     'output_dir' : 'output',
-    'temp_dir' : tempfile.gettempdir()
+    'temp_dir' : tempfile.gettempdir(),
+    'file_command_path' : os.getcwd()+'\\file'
     } #The default settings for configuration
-#======================================
+#======================================================
 #Functions and classes
-#===========================================
+#=======================================================
 class Menubar:
     def __init__(self, menubar):
         self.menubar = menubar
@@ -122,17 +123,13 @@ class Menubar:
             def save_command():
                 configurations['default_mode'] = default_mode.get()
                 configurations['sys_argv_mode'] = sys_argv_variable.get()
-                configurations['output_dir'] = path_entry_variable.get()
+                configurations['output_dir'] = output_dir_variable.get()
                 configurations['temp_dir'] = temp_dir_variable.get()
                 settings_menu.destroy()
-            def select_dir():
+            def select_dir(variable):
                 #Method for selecting output path
                 path = askdirectory()
-                path_entry_variable.set(path)
-            def select_temp_dir():
-                #Method for choosing temporary tempfiles directory.
-                path = askdirectory()
-                temp_dir_variable.set(path)
+                variable.set(path)
             #======================================
             settings_menu = Toplevel()
             settings_menu.transient(root)
@@ -142,13 +139,13 @@ class Menubar:
             #==============================================
             default_mode = StringVar().set('encode')
             default_mode = StringVar()
-            path_entry_variable = StringVar()
+            output_dir_variable = StringVar()
             sys_argv_variable = IntVar()
             temp_dir_variable = StringVar()
             #----------------------------------
             default_mode.set(configurations['default_mode'])
             sys_argv_variable.set(configurations['sys_argv_mode'])
-            path_entry_variable.set(configurations['output_dir'])
+            output_dir_variable.set(configurations['output_dir'])
             temp_dir_variable.set(configurations['temp_dir'])
             #==============================================
             style = ttk.Style()
@@ -173,14 +170,19 @@ class Menubar:
             path_settings = ttk.Frame(notebook)
             #
             output_dir_frame = ttk.LabelFrame(path_settings, text = 'Output directory')
-            path_entry = ttk.Entry(output_dir_frame, textvariable = path_entry_variable, state = 'disabled', width = 40).grid(row = 0, column = 0)
-            browse_button =  ttk.Button(output_dir_frame, text = 'Browse...', command = select_dir).grid(row = 0, column = 1)
+            path_entry = ttk.Entry(output_dir_frame, textvariable = output_dir_variable, state = 'disabled', width = 40).grid(row = 0, column = 0)
+            browse_button =  ttk.Button(output_dir_frame, text = 'Browse...', command = lambda : select_dir(output_dir_variable)).grid(row = 0, column = 1)
             output_dir_frame.grid(row = 0, column = 0)
             #
             temp_folder_frame = ttk.LabelFrame(path_settings, text = 'Temporary folder path')
             temp_path_entry = ttk.Entry(temp_folder_frame, textvariable = temp_dir_variable, state = 'disabled', width = 40).grid(row = 0, column = 0)
-            browse_button = ttk.Button(temp_folder_frame, text = 'Browse...', command = select_temp_dir).grid(row = 0, column = 1)
+            browse_button = ttk.Button(temp_folder_frame, text = 'Browse...', command = lambda : select_dir(temp_dir_variable)).grid(row = 0, column = 1)
             temp_folder_frame.grid(row = 1, column = 0)
+            
+            file_command_frame = ttk.LabelFrame(path_settings, text = "File command path")
+            file_command_path_entry = ttk.Entry(file_command_frame).grid(row = 0, column = 0)
+            file_command_frame.grid(row = 2, column = 0)
+            browse_button = ttk.Button(file_command_frame, text = "Browse...")
             #
             path_settings.grid(row = 0, column = 0)
             #=============================================
@@ -507,7 +509,7 @@ def isbase64(text):
     #This function checks to see if a file is in base64 or not
     try:
         text = text.join(text.split())
-        base64.b64decode(text, validate = True)
+        pybase64.b64decode(text, validate = True)
         return True
     except UnicodeDecodeError:
         return False
@@ -527,15 +529,15 @@ def is_file_large(path):
         return True
     else:
         return False
+    
 def get_file_type(filename):
     global save_extension
-    full_file_path = os.getcwd()+'//file'
     #This is a simple function which uses the file cli tool to find the
     #decoded base64 file type.
     #It first tries to find the extension of the file using the command [file --extension user_file]
     #This is expected to return the supposed file extension. If this method fails, the command [file --mime-type user_file]
     #is used to get the file type.
-    command = Popen(['file','--extension',filename], shell = True, cwd = full_file_path, stdout = PIPE)
+    command = Popen(['file','--extension',filename], shell = True, cwd = configurations['file_command_path'], stdout = PIPE)
     output = command.stdout.read().decode().lower().strip().split(' ')[1] #The results if command is directed to 'stdout' and read. It is then  decoded from binary and converted into lowercase. It is then stripped into two arrays [pathname : extension]
     
     if '???' not in output:
@@ -549,7 +551,7 @@ def get_file_type(filename):
             print("File's extension found were %s.\nExtension selected is %s" %(output, save_extension))
         
     elif '???' in output: #The file command returns '???' if it doesn't find an extension for a file.
-        command = Popen(['file', '--mime-type', filename], shell = True, cwd = full_file_path, stdout = PIPE)
+        command = Popen(['file', '--mime-type', filename], shell = True, cwd = configurations['file_command_path'], stdout = PIPE)
         print("Extension not found. Trying mime-type method.")
         output = command.stdout.read().decode().lower()
         file_type = output.split(" ")[1].strip()
@@ -724,6 +726,7 @@ def file_contents(file_path):
     try:
         with open(file_path, 'r') as file:
             contents = file.read()
+            
             return contents, 'normal' #The normal is to help encode function to know whether the file is a text file or binary
     except UnicodeDecodeError:
         with open(file_path, 'rb') as file:
@@ -990,6 +993,7 @@ def init_configuration():
         sys_argv_mode = config['general'].get('sys_argv_mode')
         output_dir = config['paths'].get('output_dir')
         temp_dir = config['paths'].get('temp_dir')
+        file_command_path = config['paths'].get("file_command_path")
         #____________________________________________________________
         configurations['default_mode'] = mode
         configurations['sys_argv_mode'] = sys_argv_mode
@@ -1004,6 +1008,7 @@ def init_configuration():
         configurations['output_dir'] = 'output'
         configurations['sys_argv_mode'] = 1
         configurations['temp_dir'] = tempfile.gettempdir()
+        configurations['file_command_path'] = os.getcwd()+"\\file"
         mode_variable.set('encode')
 
 init_configuration()
@@ -1100,7 +1105,8 @@ configuration['general'] = {
 }
 configuration['paths'] = {
     'output_dir' : configurations['output_dir'],
-    'temp_dir' : configurations['temp_dir']
+    'temp_dir' : configurations['temp_dir'],
+    'full_command_path' : configurations['file_command_path']
 }
 with open('configuration.ini', 'w') as file:
     configuration.write(file)
