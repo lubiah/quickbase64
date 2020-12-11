@@ -47,7 +47,7 @@ If set to 'yes', when a file is dropped on Quick Base64's exe, a command will be
 If set to 'no', when a file is dropped on Quick Base64's exe, it will just open the application.
 
 Paths
-..............
+........................
 
 Output directory : This enables you to specify a default directory, where all encoded/decoded files will be saved.
 
@@ -56,7 +56,7 @@ Whenever you close Quick Base64, the temporary files are deleted, but on a case 
 When you specify the temporary directory, it gives you more control of the temporary files.
 
 HOW TO COPY RESULTS
----------------------
+--------------------------------
 Quick Base64 provides you three ways in which you want to recieve the results.
 
 1. Copy
@@ -75,4 +75,29 @@ This option only works for images. IN CSS, you can use a base64 encoded image as
 Quick base64 will provide the results in the following syntax.
 url("data:image/image_type;base64,base64_contents")
 ======================================================================================
-Report bugs to support@eakloe.com or make an issue on github at github.com/biah/quickbase64
+
+FILE EXTENSIONS
+--------------------------
+Whenever the application uses the mime type command to generate an extension, it first obtains the mime type,
+then it looks inside data.yaml to get the associative extension of the mime type, if the extension for your mime type
+is not determined, your file is saved with a '.txt' extension.
+Also, you can add the mime type and extension inside the data.yaml file and the application will recognize it.
+    Example. If the application doesn't get the extension for your file which has a mime type of "video/avi",
+    you can add it to the application by opening 'data.yaml' and adding your extension in this format
+    video/avi : .mp4 
+After that, you do not need to restart the application, just drop your file again and the application will use the mime type
+which you just added.
+
+NB: I will be glad if you submit your "data.yaml" file to me after adding more extensions so I will include them in the next version.
+Also, you name will be acknowledged if you contribute.
+You can open a pull request at github with the changes you made to the data.yaml file or better still, send the "data.yaml" file to 
+support@eakloe.com with your name so I will acknowledge your name in the next version.
+
+Preview mode
+================
+This mode allows you to view the end results of an encoded or decode file.
+If you preview base64 contents with Quick Base64, you will have a view of the original file.
+For example, using the preview feature on a base64 encoded image will pop up the original image 
+which will be derived from the base64 contents.
+
+Report bugs to support@eakloe.com or make an issue on github at https://www.github.com/biah/quickbase64/issues  

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="styling.css">
+    <title>Copying In HTML or CSS format</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Copying encoded contents in HTML / CSS format</h1>
+    <hr>
+    <p>
+        This option is mainly for web developers, it allows you to copy the results in a way which you can insert in your html or css file.<br>
+        Please note that this option is only available for base64 contents.
+    </p>
+    <img src="copy_html_css.png" alt="Copying in HTML or CSS format.">
+    <div class="body">
+        <h2>Copying contents in HTML format</h2>
+        <p> 
+            Also note that, this option only works for images, audios and videos.<br>
+            When ever you encode a file which belongs to any of these three groups, Quick Base64 will allow you to copy it in HTML format.<br>
+            This might sound confusing so let me give an example,<br>
+            If you encode an image of type JPG and you copy it in HTML format, you will get <code>&lt;image src='data:image/jpg;base64,base64contents'&gt;</code>.<br>
+            Meaning Quick Base64 will generate the coresponding html tag with it's attributes.<br>
+            Let's try another example and encode a video of type avi.<br>
+            We will get <code>&lt;video controls src="data:video/avi;base64,base64contents"&gt;</code>.<br>
+            So this way, the application takes care of everything, you just have to paste it into your text editor.
+        </p>
+        <h2>Copying contents in CSS format</h2>
+        <p>
+            Please note, this works for only images.<br>
+            In CSS, when specifying the background image of an element, you can use base64.<br>This application makes it easy to get your image into your css file.<br>
+            For example, if you copying an image in CSS format, you will get a results similar to this.<br>
+            <code>url(data:image/jpg;base64, base64contents)</code>. This enables you to simply copy it inside your CSS file.
+        </p>
+    </div>
+</body>
+</html>

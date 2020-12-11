@@ -1,18 +1,20 @@
-        =====================
-            QUICK BASE64
-        =====================
+   		=====================
+            		   QUICK BASE64
+        		=====================
 
-        ```````````````````````
-               History
-        ``````````````````````
+	``````````````````````````````````````````````````````````````````````````````
+		HISTORY
+	`````````````````````````````````````````````````````````````````````````````
 
 -----------------------------
-Version : 0.1.1
-Date: 7 December 2020
+Version : 1.2.0
+Date: 8 December 2020
 -----------------------------
 * Fixed encode/decode radio buttons not showing.
 * Added preview option.
+* Added debug menu.
 * Major bug fixes.
+* Increased encoding and decoding speed.
 -----------------------------
 Version : 0.1.0 
 Date: 13 November 2020

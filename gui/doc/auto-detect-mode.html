@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width = device-width, initial-scale = 1">
+    <link rel="stylesheet" type="text/css" href="styling.css">
+    <title>Auto-detect mode</title>
+</head>
+<body>
+    <h1>Using the Auto-detect mode</h1>
+    <hr>
+    <div class="body">
+        <div>
+            <p>
+                The auto-detect mode is nothing unique, it's just a bit of common sense. When you check the auto-detect to on, it over-rides the radiobuttons value.
+                That is, even if the radio button is set to encode, and your file needs to be decoded, it will over-ride the encode and decode your file.<br>
+                The auto-detect mode uses a simple conditional statement.<br>
+                <span style="color: violet">if</span> your object contains base64 contents, it will decode.<br>
+                <span style="color: violet">else</span> it will encode it.
+            </p>
+            <p>
+                This mode is very useful as there are times when you don't know whether your file contains base64 contents or not.<br>
+                Also, it speeds up the encoding and decoding because you don't need to set the mode yourself.
+            </p>
+            <img src="auto_detect_gif.gif" alt="A gif image showing how the auto-detect feature of Quick Base64 works" style="display: block;">
+            <p>
+                As you can see from the gif image above, this is how the auto-detect feature of Quick Base64 works.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

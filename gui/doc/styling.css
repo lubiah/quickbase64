@@ -1,0 +1,45 @@
+h1 {
+    color: blue;
+    text-align: center;
+}
+h2 {
+    color: green;
+}
+h3 {
+    color: purple;
+}
+hr {
+    width: 80%;
+}
+
+p {
+    font-size: 20px;
+}
+
+* {
+    font-family: sans-serif;
+}
+
+.body {
+    margin : 35px;
+}
+ul li {
+    list-style: square;
+    margin: 8px;
+}
+
+a {
+    text-decoration: none;
+}
+li {
+    margin: 8px;
+}
+
+code {
+    font-family: monospace;
+    color: red;
+    border: 1px solid grey;
+    padding: 2px;
+    border-radius: 4px;
+    display: inline-block;
+}

@@ -29,6 +29,7 @@ from configparser import ConfigParser
 import sys
 import pyperclip
 import win32clipboard
+import yaml
 #=====================================
 #Code
 #=======================================
@@ -73,7 +74,7 @@ class Menubar:
     def show_debug():
         def show():
             global debug_window
-            debug_window = debugwindow.DebugWindow(stdout = True, stderr = True)
+            debug_window = debugwindow.DebugWindow(stdout = True)
         try:
             if debug_window.state() == 'normal' or debug_window.state() == 'iconic':
                 debug_window.destroy()
@@ -90,7 +91,7 @@ class Menubar:
             text_label = Label(about_menu, text = '''An open-source base64 file encoder which can encode your files to base64 format.\nIt can also decode your base64 text to it\'s original file.''', font = ('Calibri', 13)).grid(row = 1, column = 0)
             site_link = linklabel.LinkLabel(about_menu, text = 'Website: https://www.eakloe.com/quickbase64', font = ('Calibri', 13), link = 'https://www.eakloe.com/quickbase64', cursor = 'hand2').grid(row = 2, column = 0)
             code_link = linklabel.LinkLabel(about_menu, text = 'Source code: https://www.github.com/biah/quickbase64', font = ('Calibri', 13), link = 'https://www.github.com/biah/quickbase64', cursor = 'hand2').grid(row = 3, column = 0)
-            version_label = Label(about_menu, text = 'Version : 0.1.1',font = ('Calibri', 15)).grid(row = 4, column = 0)
+            version_label = Label(about_menu, text = 'Version : 1.2.0',font = ('Calibri', 15)).grid(row = 4, column = 0)
             #=====================================================
             about_menu.update()
             height = about_menu.winfo_height()
@@ -125,10 +126,14 @@ class Menubar:
                 configurations['sys_argv_mode'] = sys_argv_variable.get()
                 configurations['output_dir'] = output_dir_variable.get()
                 configurations['temp_dir'] = temp_dir_variable.get()
+                configurations['file_command_path'] = file_command_path_variable.get()
                 settings_menu.destroy()
             def select_dir(variable):
                 #Method for selecting output path
                 path = askdirectory()
+                if path == '':
+                    print("No path selected")
+                    return
                 variable.set(path)
             #======================================
             settings_menu = Toplevel()
@@ -142,11 +147,13 @@ class Menubar:
             output_dir_variable = StringVar()
             sys_argv_variable = IntVar()
             temp_dir_variable = StringVar()
+            file_command_path_variable = StringVar()
             #----------------------------------
             default_mode.set(configurations['default_mode'])
             sys_argv_variable.set(configurations['sys_argv_mode'])
-            output_dir_variable.set(configurations['output_dir'])
+            output_dir_variable.set(configurations['output_dir']) 
             temp_dir_variable.set(configurations['temp_dir'])
+            file_command_path_variable.set(configurations['file_command_path'])
             #==============================================
             style = ttk.Style()
             #==============================================
@@ -180,9 +187,9 @@ class Menubar:
             temp_folder_frame.grid(row = 1, column = 0)
             
             file_command_frame = ttk.LabelFrame(path_settings, text = "File command path")
-            file_command_path_entry = ttk.Entry(file_command_frame).grid(row = 0, column = 0)
+            file_command_path_entry = ttk.Entry(file_command_frame, state = DISABLED, width = 40, textvariable = file_command_path_variable).grid(row = 0, column = 0)
             file_command_frame.grid(row = 2, column = 0)
-            browse_button = ttk.Button(file_command_frame, text = "Browse...")
+            browse_button = ttk.Button(file_command_frame, text = "Browse...", command = lambda : select_dir(file_command_path_variable)).grid(row = 0, column = 1)
             #
             path_settings.grid(row = 0, column = 0)
             #=============================================
@@ -292,10 +299,12 @@ def save_file_manual():
             file.write(results)
 
 def restart():
+    print(__file__)
     os.startfile(__file__)
     root.quit()
     
 def new_window():
+    print(__file__)
     os.startfile(__file__)
 
 def save_file():
@@ -456,6 +465,11 @@ def load_file_clipboard():
             checked = True
             load_file_clipboard()
 
+def get_from_yaml(query):
+    with open("data.yaml", "r") as file:
+        dictionary = yaml.load(file, Loader=yaml.FullLoader)
+        data = dictionary.get(query)
+        return data
 
 def delete(file_path):
     os.remove(file_path)
@@ -537,9 +551,9 @@ def get_file_type(filename):
     #It first tries to find the extension of the file using the command [file --extension user_file]
     #This is expected to return the supposed file extension. If this method fails, the command [file --mime-type user_file]
     #is used to get the file type.
-    command = Popen(['file','--extension',filename], shell = True, cwd = configurations['file_command_path'], stdout = PIPE)
+    command = Popen(['file','--extension',filename], cwd = configurations['file_command_path'], stdout = PIPE, stderr = PIPE, stdin = PIPE, shell = True)
     output = command.stdout.read().decode().lower().strip().split(' ')[1] #The results if command is directed to 'stdout' and read. It is then  decoded from binary and converted into lowercase. It is then stripped into two arrays [pathname : extension]
-    
+    print(output)
     if '???' not in output:
         print("Extension found...")
         if '/' not in output: #The output will contain '/' if multiple extensions are given. So if '/' is not in the output. The output is only one.
@@ -551,79 +565,20 @@ def get_file_type(filename):
             print("File's extension found were %s.\nExtension selected is %s" %(output, save_extension))
         
     elif '???' in output: #The file command returns '???' if it doesn't find an extension for a file.
-        command = Popen(['file', '--mime-type', filename], shell = True, cwd = configurations['file_command_path'], stdout = PIPE)
+        command = Popen(['file', '--mime-type', filename], cwd = configurations['file_command_path'], stdout = PIPE, stderr = PIPE, stdin = PIPE, shell = True)
         print("Extension not found. Trying mime-type method.")
         output = command.stdout.read().decode().lower()
+        print(output)
         file_type = output.split(" ")[1].strip()
         print("File type is ", file_type)
-        if file_type == 'text/plain':
-            save_extension = '.txt'
-            return file_type
-        elif file_type == 'audio/mpeg':
-            save_extension = '.mp3'
-            return file_type
-        elif file_type == 'application/x-dosexec':
-            save_extension = '.exe'
-            return file_type
-        elif file_type == 'application/x-font-tff':
-            save_extension = '.ttf'
-            return file_type
-        elif file_type == 'image/png':
-            save_extension = '.png'
-            return file_type
-        elif file_type == 'image/gif':
-            save_extension = '.gif'
-            return file_type
-        elif file_type == 'application/octet-stream':
-            save_extension = '.txt'
-            return file_type
-        elif file_type == 'text/html':
-            save_extension = '.html'
-            return file_type
-        elif file_type == 'text/rtf':
-            save_extension = '.rtf'
-            return file_type
-        elif file_type == 'text/x-c++':
-            save_extension = '.cpp'
-            return file_type
-        elif file_type == 'text/x-python':
-            save_extension = '.py'
-            return file_type
-        elif file_type == 'text/x-msdos-batch':
-            save_extension = '.bat'
-            return file_type
-        elif file_type == 'text/x-php':
-            save_extension = '.php'
-            return file_type
-        elif file_type == 'application/zip':
-            save_extension = '.zip'
-            return file_type
-        elif file_type == 'application/x-gzip':
-            save_extension = '.tar'
-            return file_type
-        elif file_type == 'text/xml':
-            save_extension = '.xml'
-            return file_type
-        elif file_type == 'video/mp4':
-            save_extension = '.mp4'
-            return file_type
-        elif file_type == 'image/svg':
-            save_extension = '.svg'
-            return file_type
-        elif file_type == 'application/json':
-            save_extension = '.json'
-            return file_type
-        elif file_type == "application/vnd.ms-fontobject":
-            save_extension = ".eot"
-            return file_type
-        elif file_type == "font/sfnt":
-            save_extension = ".ttf"
-            return file_type
-        elif file_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-            save_extension = ".docx"
-        elif file_type == "application/x-putty-private-key":
-            save_extension = ".ppk"
-
+        
+        extension = get_from_yaml(file_type)
+        print("Extension obtained from yaml file is %s" % extension)
+        if extension == None:
+            save_extension == ".txt"
+            print("Extension being used is .txt")
+        else:
+            save_extension = extension
 
 def write_to_temp():
     if path.exists(configurations['temp_dir']) == False: #Checks to see if the temp_dir path is avaible
@@ -999,6 +954,7 @@ def init_configuration():
         configurations['sys_argv_mode'] = sys_argv_mode
         configurations['output_dir'] = output_dir
         configurations['temp_dir'] = temp_dir
+        configurations['file_command_path'] = file_command_path
         if mode == 'detect':
             auto_detect_variable.set(1)
         mode_variable.set(mode)
@@ -1106,7 +1062,7 @@ configuration['general'] = {
 configuration['paths'] = {
     'output_dir' : configurations['output_dir'],
     'temp_dir' : configurations['temp_dir'],
-    'full_command_path' : configurations['file_command_path']
+    'file_command_path' : configurations['file_command_path']
 }
 with open('configuration.ini', 'w') as file:
     configuration.write(file)

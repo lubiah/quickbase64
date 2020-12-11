@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Saving encoded or decoded contents</title>
+    <link rel="stylesheet" type="text/css" href="styling.css">
+</head>
+<body>
+    <h1>Saving Encoded Or Decoded Contents</h1>
+    <hr>
+    <div class="body">
+        <p>
+            After encoding or decoding your file, you might want to save it.<br>
+            The application provides you with a method for saving your files.<br>
+            Saving an <a href="#saving-encoded-content">encoded content</a> is different from also saving <a href="#saving-decoded-content">decoded contents</a>.<br> 
+            Let's take a look at both scenarios.
+        </p>
+        <div>
+            <h2 id="saving-encoded-content">Saving Encoded Contents</h2>
+            <p>After encoding your file, the application will allow you to save the contents.<br>
+            There are three ways in which you can save encoded contents.<br>
+            <ol>
+                <li>Let Quick Base64 save it with a .txt extension</li>
+                <li>Provide your own extension and save the file</li>
+                <li>Copy the file to clipboard</li>
+            </ol>
+        </p>
+        <img src="saving-file.png" alt="Saving a file">
+        </div>
+        <div>
+            <h3>Allowing Quick Base64 to save the file</h3>
+            <p>When you select this option after encoding a file to base64, the application will save your encoded contents in a file with .txt extension.<br>
+            Also note that, the save file will take the name of the original file just that it will end in a .txt extension
+        </p>
+        <h3>Providing your own extension</h3>
+        <p>
+            When saving your encoded contents, you are allowed to provide your own extension.<br>
+            To do that, select Save (Give ext.) option and this will allow you to save your file under your preferred extension.<br>
+            Do note that when you select this option, your file will be saved under a new name not the name of the original file.<br>
+            The name of the file will be provided by you.
+            </p>
+        <h3>Copying the results to clipboard</h3>
+        <p>
+            Also, you can copy the results into your system's clipboard.
+        </p>
+        </div>
+        <div>
+            <h2 id="saving-decoded-content">Saving decoded contents</h2>
+            <p>
+                After you are done decoding your file from base64 format, the application provides you with methods to save your file.<br>
+                Also, there are three ways in which you can save your file.
+                <ul>
+                    <li>Let Quick Base64 save it by providing an extension.</li>
+                    <li>Provide your own extension and save the file</li>
+                    <li>Copy the file to clipboard</li>
+                </ul>
+            </p>
+            <h3>Allowing the application to generate an extension</h3>
+            <p>
+                When you decode base64 contents, Quick Base64 can generate an extension for you file based on the mime-type of the decoded contents.<br>
+                That is, Quick Base64 can decode base64 contents to it's original format without knowing the extension of the original file.<br>
+                This is achieved using the file command.
+                The file command can generate a mime type out of the decoded
+                contents, then Quick Base64 will generate an extension based on the mime type.<br>
+                This is really usefull if you have no idea about the contents you are decoding.
+            </p>
+            <h3>Providing your own extension</h3>
+            <p>
+                Also, you can also provide the extension for which the decoded file will be saved in.<br>
+                This method comes in handy when you want to save the decoded contents in a specific file format.
+            </p>
+            <h3>Copying contents to clipboard</h3>
+            <p>
+            After decoding a file, you can just copy all of the contents to your system clipbord.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

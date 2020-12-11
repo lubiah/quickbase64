@@ -1,0 +1,74 @@
+#Mime types
+
+#A
+application/x-dosexec : .exe
+audio/mpeg : .mp3
+application/x-font-tff : ttf
+application/octet-stream : .file
+application/zip : .zip
+application/x-gzip : .tar
+application/json : .json
+application/vnd.ms-fontobject : .eot
+application/vnd.openxmlformats-officedocument.wordprocessingml.document : .docx
+application/x-putty-private-key : .ppk
+application/csv : .csv
+
+#B
+
+#C
+
+#D
+
+#E
+
+#F
+font/sfnt : .ttf
+#G
+
+#H
+
+#I
+image/gif : .gif
+image/png : .png
+image/svg : .svg
+#J
+
+#K
+
+#L
+
+#M
+
+#N
+
+#O
+
+#P
+
+#Q
+
+#R
+
+#S
+
+#T
+text/x-php : .php
+text/x-msdos-batch : .bat
+text/x-python : .py
+text/html : .html
+text/rtf : .rtf
+text/x-c++ : .cpp
+text/plain : .txt
+text/xml : .xml
+text/x-shellscript : .sh
+#U
+
+#V
+video/mp4 : .mp4
+#W
+
+#X
+
+#Y
+
+#Z

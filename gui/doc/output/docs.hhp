@@ -1,0 +1,12 @@
+[OPTIONS]
+Compatibility=1.1 or later
+Compiled file=docs.chm
+Contents file=Table of Contents.hhc
+Default topic=introduction.html
+Display compile progress=Yes
+Index file=Index.hhk
+Language=0x409 English (United States)
+
+
+[INFOTYPES]
+
