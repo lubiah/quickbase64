@@ -6,7 +6,7 @@ Can I get a star :star: - I would really appreciate it. :smile:
 
 -------------------
 
- [![Website shields.io](https://img.shields.io/website-up-down-green-red/https://www.kudadam.com/quickbase64.svg)](http://www.eakloe.com)    [![Github all releases](https://img.shields.io/github/downloads/biah/quickbase64/total.svg)](https://GitHub.com/Biah/quickbase64/releases/)
+ [![Website shields.io](https://img.shields.io/website-up-down-green-red/https://www.kudadam.com/quickbase64.svg)](https://www.kudadam.com/quickbase64)    [![Github all releases](https://img.shields.io/github/downloads/biah/quickbase64/total.svg)](https://GitHub.com/Biah/quickbase64/releases/)
 
 ![](https://forthebadge.com/images/badges/open-source.svg) [![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
 
